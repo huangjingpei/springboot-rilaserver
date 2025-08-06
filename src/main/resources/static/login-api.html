@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录 - API版本</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 30px;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        .loading {
+            display: none;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        .token-display {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+    </style>
+
+    <!-- QT INTEGRATION START: Step 1 -->
+    <!-- 引入 qwebchannel.js。请确保在你的Spring Boot项目的静态资源目录下有这个文件 -->
+    <script src="/qwebchannel.js"></script>
+    <!-- QT INTEGRATION END: Step 1 -->
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="form-container">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2><i class="fas fa-sign-in-alt me-2"></i>用户登录</h2>
+                    <p class="mb-0">欢迎回来</p>
+                </div>
+                <div class="card-body p-4">
+                    <!-- 成功消息 -->
+                    <div id="successAlert" class="alert alert-success" style="display: none;">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span id="successMessage"></span>
+                    </div>
+                    
+                    <!-- 错误消息 -->
+                    <div id="errorAlert" class="alert alert-danger" style="display: none;">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <span id="errorMessage"></span>
+                    </div>
+
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="userId" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>用户ID（邮箱）
+                            </label>
+                            <input type="email" class="form-control" id="userId" name="userId" 
+                                   placeholder="请输入邮箱地址" required>
+                            <div class="invalid-feedback" id="userIdError"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>密码
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="请输入密码" required>
+                            <div class="invalid-feedback" id="passwordError"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="deviceId" class="form-label">
+                                <i class="fas fa-mobile-alt me-2"></i>设备ID（可选）
+                            </label>
+                            <input type="text" class="form-control" id="deviceId" name="deviceId" 
+                                   placeholder="留空自动生成">
+                        </div>
+
+                        <!-- 记住密码选项 -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
+                            <label class="form-check-label" for="rememberMe">
+                                <i class="fas fa-save me-1"></i>记住用户名和密码
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <span class="loading">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    登录中...
+                                </span>
+                                <span class="normal">
+                                    <i class="fas fa-sign-in-alt me-2"></i>立即登录
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- 清除保存的登录信息 -->
+                        <div class="text-center mt-2">
+                            <button type="button" class="btn btn-link btn-sm text-muted" onclick="clearSavedCredentials()">
+                                <i class="fas fa-trash me-1"></i>清除保存的登录信息
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <span class="text-muted">还没有账号？</span>
+                            <a href="/register-api.html" class="text-decoration-none">
+                                <i class="fas fa-user-plus me-1"></i>立即注册
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- 登录成功后的Token显示 -->
+                    <div id="tokenSection" style="display: none;">
+                        <hr>
+                        <h5><i class="fas fa-key me-2"></i>登录成功！</h5>
+                        <p class="text-muted">您的JWT Token：</p>
+                        <div id="tokenDisplay" class="token-display"></div>
+                        <div class="mt-3">
+                            <button class="btn btn-outline-primary btn-sm" onclick="copyToken()">
+                                <i class="fas fa-copy me-1"></i>复制Token
+                            </button>
+                            <button class="btn btn-outline-success btn-sm ms-2" onclick="testWithToken()">
+                                <i class="fas fa-test me-1"></i>测试API
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentToken = null;
+
+        // <!-- QT INTEGRATION START: Step 2 -->
+        // 声明一个全局变量来持有Qt的通信桥梁对象
+        let qtBridge = null;
+
+        // 当页面加载完成后，初始化与Qt的连接
+        window.onload = function() {
+            // 加载保存的登录信息
+            loadSavedCredentials();
+            
+            // 检查是否在Qt环境中
+            if (typeof QWebChannel !== 'undefined' && typeof qt !== 'undefined' && qt.webChannelTransport) {
+                console.log("QWebChannel is available and Qt environment detected");
+                try {
+                    new QWebChannel(qt.webChannelTransport, function(channel) {
+                        console.log("Channel created:", channel);
+                        console.log("Available objects:", Object.keys(channel.objects));
+                        qtBridge = channel.objects.loginBridge;
+                        if (qtBridge) {
+                            console.log("loginBridge found:", qtBridge);
+                        } else {
+                            console.log("loginBridge not found in channel.objects");
+                        }
+                    });
+                } catch (error) {
+                    console.log("Qt initialization error:", error);
+                }
+            } else {
+                console.log("Running in browser environment (not Qt)");
+            }
+        };
+        // <!-- QT INTEGRATION END: Step 2 -->
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 重置表单验证状态
+            resetValidation();
+            
+            // 显示加载状态
+            setLoading(true);
+            
+            // 收集表单数据
+            const formData = {
+                userId: document.getElementById('userId').value,
+                password: document.getElementById('password').value,
+                deviceId: document.getElementById('deviceId').value || null
+            };
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // <!-- QT INTEGRATION START: Step 3 -->
+                    // 登录成功后的逻辑分发
+                    currentToken = result.token;
+
+                    // 保存登录信息（如果用户选择了记住密码）
+                    const rememberMe = document.getElementById('rememberMe').checked;
+                    if (rememberMe) {
+                        saveCredentials(formData.userId, formData.password);
+                    } else {
+                        // 如果用户没有选择记住密码，清除之前保存的信息
+                        clearSavedCredentials();
+                    }
+
+                    if (qtBridge) {
+                        // 如果在Qt环境中，直接将token传递给C++
+                        qtBridge.onLoginSuccess(currentToken);
+                    } else {
+                        // 如果在普通浏览器中，执行原来的逻辑
+                        showSuccess(result.message || '登录成功！');
+                        showToken(result);
+                    }
+                    // <!-- QT INTEGRATION END: Step 3 -->
+                } else {
+                    showError(result.message || '登录失败，请检查用户名和密码');
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showError('网络错误，请检查网络连接');
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        function setLoading(loading) {
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingSpan = submitBtn.querySelector('.loading');
+            const normalSpan = submitBtn.querySelector('.normal');
+            
+            if (loading) {
+                loadingSpan.style.display = 'inline';
+                normalSpan.style.display = 'none';
+                submitBtn.disabled = true;
+            } else {
+                loadingSpan.style.display = 'none';
+                normalSpan.style.display = 'inline';
+                submitBtn.disabled = false;
+            }
+        }
+        
+        function showSuccess(message) {
+            hideAlerts();
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successAlert').style.display = 'block';
+        }
+        
+        function showError(message) {
+            hideAlerts();
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorAlert').style.display = 'block';
+        }
+        
+        function hideAlerts() {
+            document.getElementById('successAlert').style.display = 'none';
+            document.getElementById('errorAlert').style.display = 'none';
+        }
+        
+        function resetValidation() {
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+        }
+        
+        function showToken(result) {
+            document.getElementById('tokenDisplay').textContent = result.token;
+            document.getElementById('tokenSection').style.display = 'block';
+        }
+        
+        function copyToken() {
+            if (currentToken) {
+                navigator.clipboard.writeText(currentToken).then(() => {
+                    alert('Token已复制到剪贴板！');
+                }).catch(() => {
+                    // 降级方案
+                    const textArea = document.createElement('textarea');
+                    textArea.value = currentToken;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Token已复制到剪贴板！');
+                });
+            }
+        }
+        
+        function testWithToken() {
+            if (currentToken) {
+                // 测试一个需要认证的API
+                fetch('/api/admin/listAuthUsers', {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('API测试成功！响应：' + JSON.stringify(data, null, 2));
+                })
+                .catch(error => {
+                    alert('API测试失败：' + error.message);
+                });
+            }
+        }
+        
+        // 实时验证
+        document.getElementById('userId').addEventListener('blur', function() {
+            const email = this.value;
+            if (email && !isValidEmail(email)) {
+                this.classList.add('is-invalid');
+                document.getElementById('userIdError').textContent = '请输入有效的邮箱地址';
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // ==================== 记住密码功能 ====================
+        
+        /**
+         * 保存登录凭据到本地存储
+         * @param {string} userId - 用户ID（邮箱）
+         * @param {string} password - 密码
+         */
+        function saveCredentials(userId, password) {
+            try {
+                // 使用简单的Base64编码（注意：这不是加密，只是基本混淆）
+                const encodedUserId = btoa(userId);
+                const encodedPassword = btoa(password);
+                
+                // 保存到localStorage
+                localStorage.setItem('savedUserId', encodedUserId);
+                localStorage.setItem('savedPassword', encodedPassword);
+                localStorage.setItem('rememberMe', 'true');
+                
+                console.log('登录信息已保存');
+            } catch (error) {
+                console.error('保存登录信息失败:', error);
+            }
+        }
+        
+        /**
+         * 从本地存储加载登录凭据
+         */
+        function loadSavedCredentials() {
+            try {
+                const savedUserId = localStorage.getItem('savedUserId');
+                const savedPassword = localStorage.getItem('savedPassword');
+                const rememberMe = localStorage.getItem('rememberMe');
+                
+                if (savedUserId && savedPassword && rememberMe === 'true') {
+                    // 解码并填充表单
+                    const userId = atob(savedUserId);
+                    const password = atob(savedPassword);
+                    
+                    document.getElementById('userId').value = userId;
+                    document.getElementById('password').value = password;
+                    document.getElementById('rememberMe').checked = true;
+                    
+                    console.log('已加载保存的登录信息');
+                }
+            } catch (error) {
+                console.error('加载保存的登录信息失败:', error);
+                // 如果加载失败，清除可能损坏的数据
+                clearSavedCredentials();
+            }
+        }
+        
+        /**
+         * 清除保存的登录凭据
+         */
+        function clearSavedCredentials() {
+            try {
+                localStorage.removeItem('savedUserId');
+                localStorage.removeItem('savedPassword');
+                localStorage.removeItem('rememberMe');
+                
+                // 清空表单
+                document.getElementById('userId').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('rememberMe').checked = false;
+                
+                console.log('已清除保存的登录信息');
+                
+                // 显示提示信息
+                showSuccess('已清除保存的登录信息');
+            } catch (error) {
+                console.error('清除登录信息失败:', error);
+            }
+        }
+        
+        /**
+         * 检查是否有保存的登录信息
+         * @returns {boolean} 是否有保存的登录信息
+         */
+        function hasSavedCredentials() {
+            const savedUserId = localStorage.getItem('savedUserId');
+            const savedPassword = localStorage.getItem('savedPassword');
+            const rememberMe = localStorage.getItem('rememberMe');
+            
+            return !!(savedUserId && savedPassword && rememberMe === 'true');
+        }
+        
+        // 页面加载时检查是否有保存的登录信息
+        document.addEventListener('DOMContentLoaded', function() {
+            if (hasSavedCredentials()) {
+                console.log('检测到保存的登录信息');
+            }
+        });
+    </script>
+</body>
+</html> 

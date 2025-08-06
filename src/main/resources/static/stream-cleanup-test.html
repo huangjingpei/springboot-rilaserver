@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>僵尸流清理测试</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card {
+            margin-bottom: 20px;
+        }
+        .result-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .success {
+            color: #198754;
+        }
+        .warning {
+            color: #fd7e14;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">僵尸流清理测试</h1>
+        
+        <!-- 认证信息 -->
+        <div class="card">
+            <div class="card-header">
+                <h5>认证信息</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="token" class="form-label">JWT Token</label>
+                        <input type="text" class="form-control" id="token" placeholder="输入JWT token">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="userId" class="form-label">用户ID</label>
+                        <input type="text" class="form-control" id="userId" placeholder="输入用户ID">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 全局清理 -->
+        <div class="card">
+            <div class="card-header">
+                <h5>全局僵尸流清理</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">清理所有用户的僵尸流（需要管理员权限）</p>
+                <button class="btn btn-warning" onclick="cleanupAllZombieStreams()">清理所有僵尸流</button>
+                <div id="cleanupAllResult" class="result-box" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <!-- 用户清理 -->
+        <div class="card">
+            <div class="card-header">
+                <h5>用户僵尸流清理</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="cleanupUserId" class="form-label">用户ID</label>
+                        <input type="text" class="form-control" id="cleanupUserId" placeholder="输入要清理的用户ID">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button class="btn btn-primary" onclick="cleanupUserZombieStreams()">清理用户僵尸流</button>
+                            <button class="btn btn-info" onclick="getUserZombieStreams()">查看用户僵尸流</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="cleanupUserResult" class="result-box" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <!-- 推流统计 -->
+        <div class="card">
+            <div class="card-header">
+                <h5>推流统计</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="statsUserId" class="form-label">用户ID</label>
+                        <input type="text" class="form-control" id="statsUserId" placeholder="输入用户ID">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button class="btn btn-success" onclick="getUserStreamStats()">获取推流统计</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="streamStatsResult" class="result-box" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局清理僵尸流
+        async function cleanupAllZombieStreams() {
+            const token = document.getElementById('token').value;
+            if (!token) {
+                showResult('cleanupAllResult', '请输入JWT token', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/stream-cleanup/cleanup-all', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('cleanupAllResult', 
+                        `清理成功！清理了 ${result.cleanedCount} 个僵尸流`, 'success');
+                } else {
+                    showResult('cleanupAllResult', `清理失败: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult('cleanupAllResult', `请求失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 清理用户僵尸流
+        async function cleanupUserZombieStreams() {
+            const token = document.getElementById('token').value;
+            const userId = document.getElementById('cleanupUserId').value;
+            
+            if (!token || !userId) {
+                showResult('cleanupUserResult', '请输入JWT token和用户ID', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/stream-cleanup/cleanup-user/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('cleanupUserResult', 
+                        `用户僵尸流清理成功！用户: ${result.userId}, 清理数量: ${result.cleanedCount}`, 'success');
+                } else {
+                    showResult('cleanupUserResult', `清理失败: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult('cleanupUserResult', `请求失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 获取用户僵尸流列表
+        async function getUserZombieStreams() {
+            const token = document.getElementById('token').value;
+            const userId = document.getElementById('cleanupUserId').value;
+            
+            if (!token || !userId) {
+                showResult('cleanupUserResult', '请输入JWT token和用户ID', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/stream-cleanup/zombie-streams/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    let html = `<strong>用户僵尸流列表 (${result.count}个):</strong><br>`;
+                    if (result.zombieStreams && result.zombieStreams.length > 0) {
+                        result.zombieStreams.forEach((stream, index) => {
+                            html += `${index + 1}. StreamID: ${stream.streamId}, 状态: ${stream.status}, 创建时间: ${stream.createdAt}<br>`;
+                        });
+                    } else {
+                        html += '没有找到僵尸流';
+                    }
+                    showResult('cleanupUserResult', html, 'success');
+                } else {
+                    showResult('cleanupUserResult', `获取失败: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult('cleanupUserResult', `请求失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 获取用户推流统计
+        async function getUserStreamStats() {
+            const token = document.getElementById('token').value;
+            const userId = document.getElementById('statsUserId').value;
+            
+            if (!token || !userId) {
+                showResult('streamStatsResult', '请输入JWT token和用户ID', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/stream-cleanup/stream-stats/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    let html = `
+                        <strong>推流统计信息:</strong><br>
+                        用户ID: ${result.userId}<br>
+                        当前推流数: ${result.currentStreams}<br>
+                        最大推流数: ${result.maxStreams}<br>
+                        清理的僵尸流数: ${result.cleanedZombieStreams}<br>
+                        是否可以开始新推流: ${result.canStartNewStream ? '是' : '否'}
+                    `;
+                    showResult('streamStatsResult', html, 'success');
+                } else {
+                    showResult('streamStatsResult', `获取失败: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult('streamStatsResult', `请求失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 显示结果
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result-box ${type}`;
+            element.innerHTML = message;
+        }
+        
+        // 页面加载时自动填充用户ID
+        document.addEventListener('DOMContentLoaded', function() {
+            const userId = document.getElementById('userId').value;
+            if (userId) {
+                document.getElementById('cleanupUserId').value = userId;
+                document.getElementById('statsUserId').value = userId;
+            }
+        });
+        
+        // 当用户ID输入框变化时，同步到其他输入框
+        document.getElementById('userId').addEventListener('input', function() {
+            const userId = this.value;
+            document.getElementById('cleanupUserId').value = userId;
+            document.getElementById('statsUserId').value = userId;
+        });
+    </script>
+</body>
+</html> 

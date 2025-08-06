@@ -1,0 +1,9 @@
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" rx="12" fill="#28a745" opacity="0.1"/>
+  <rect x="20" y="20" width="40" height="40" rx="8" fill="#28a745" opacity="0.2"/>
+  <rect x="28" y="28" width="24" height="24" rx="4" fill="#28a745"/>
+  <circle cx="36" cy="36" r="2" fill="white"/>
+  <circle cx="44" cy="36" r="2" fill="white"/>
+  <circle cx="40" cy="44" r="2" fill="white"/>
+  <text x="40" y="55" text-anchor="middle" font-family="Arial, sans-serif" font-size="6" fill="white" font-weight="bold">GAME</text>
+</svg> 

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推流通知测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .message {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 5px 0;
+            border-left: 4px solid #007bff;
+        }
+        .stream-event {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .url-display {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        .stream-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .stream-info > div {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>推流通知测试页面</h1>
+    
+    <div class="section">
+        <h2>1. WebSocket连接</h2>
+        <div id="connectionStatus" class="status disconnected">未连接</div>
+        <input type="text" id="token" placeholder="输入JWT Token" style="width: 400px; padding: 5px;">
+        <input type="text" id="roomId" placeholder="房间ID" value="test-room" style="width: 200px; padding: 5px;">
+        <button onclick="connect()">连接WebSocket</button>
+        <button onclick="disconnect()">断开连接</button>
+    </div>
+    
+    <div class="section">
+        <h2>2. 获取推流地址</h2>
+        <button onclick="getPushUrl()" id="getPushUrlBtn">获取推流地址</button>
+        <div id="pushUrlResult" class="url-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. 推流配置（用于OBS）</h2>
+        <div id="obsConfig" class="url-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. 实时通知消息</h2>
+        <button onclick="clearMessages()">清空消息</button>
+        <div id="messages"></div>
+    </div>
+    
+    <div class="section">
+        <h2>5. 当前流信息</h2>
+        <div id="currentStream" class="stream-info"></div>
+    </div>
+
+    <script>
+        let ws = null;
+        let currentStreamId = '';
+        let currentStreamInfo = null;
+        
+        function getToken() {
+            return document.getElementById('token').value;
+        }
+        
+        function connect() {
+            const token = getToken();
+            if (!token) {
+                alert('请输入JWT Token');
+                return;
+            }
+            
+            const roomId = document.getElementById('roomId').value || 'test-room';
+                            const wsUrl = `ws://${window.location.host}/ws?token=${token}&roomId=${roomId}`;
+            
+            try {
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = function() {
+                    document.getElementById('connectionStatus').textContent = '已连接';
+                    document.getElementById('connectionStatus').className = 'status connected';
+                    addMessage('系统', 'WebSocket连接成功');
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleMessage(data);
+                    } catch (e) {
+                        addMessage('系统', '收到消息: ' + event.data);
+                    }
+                };
+                
+                ws.onclose = function() {
+                    document.getElementById('connectionStatus').textContent = '连接已断开';
+                    document.getElementById('connectionStatus').className = 'status disconnected';
+                    addMessage('系统', 'WebSocket连接已断开');
+                };
+                
+                ws.onerror = function(error) {
+                    addMessage('错误', 'WebSocket连接错误: ' + error);
+                };
+                
+            } catch (error) {
+                addMessage('错误', '连接失败: ' + error.message);
+            }
+        }
+        
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+        
+        function handleMessage(data) {
+            if (data.type === 'streamEvent') {
+                handleStreamEvent(data);
+            } else {
+                addMessage(data.type || '消息', data.message || JSON.stringify(data));
+            }
+        }
+        
+        function handleStreamEvent(data) {
+            const eventType = data.event;
+            const message = `推流事件: ${eventType}`;
+            
+            if (eventType === 'publish_started') {
+                currentStreamId = data.streamId;
+                currentStreamInfo = data;
+                updateStreamInfo(data);
+                addMessage('推流开始', message, 'stream-event');
+            } else if (eventType === 'publish_stopped') {
+                currentStreamInfo = null;
+                updateStreamInfo(null);
+                addMessage('推流结束', message, 'stream-event');
+            }
+        }
+        
+        function updateStreamInfo(data) {
+            const container = document.getElementById('currentStream');
+            if (!data) {
+                container.innerHTML = '<div>暂无推流信息</div>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div><strong>流ID:</strong> ${data.streamId}</div>
+                <div><strong>用户ID:</strong> ${data.userId}</div>
+                <div><strong>状态:</strong> ${data.status}</div>
+                <div><strong>时间:</strong> ${new Date(data.timestamp).toLocaleString()}</div>
+                <div><strong>RTMP:</strong> ${data.rtmpUrl}</div>
+                <div><strong>HLS:</strong> ${data.hlsUrl}</div>
+                <div><strong>FLV:</strong> ${data.flvUrl}</div>
+                <div><strong>推流地址:</strong> ${data.pushUrl}</div>
+            `;
+        }
+        
+        function addMessage(type, content, className = '') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${className}`;
+            messageDiv.innerHTML = `
+                <strong>[${new Date().toLocaleTimeString()}] ${type}:</strong> ${content}
+            `;
+            messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+        }
+        
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+        
+        async function getPushUrl() {
+            const token = getToken();
+            if (!token) {
+                alert('请先输入JWT Token');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/zlm/getPushUrl', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    currentStreamId = result.streamId;
+                    
+                    document.getElementById('pushUrlResult').innerHTML = 
+                        `<strong>推流地址:</strong> ${result.pushUrl}<br>
+                         <strong>流ID:</strong> ${result.streamId}<br>
+                         <strong>用户ID:</strong> ${result.userId}`;
+                    
+                    const rtmpUrl = result.pushUrl.substring(0, result.pushUrl.lastIndexOf('/'));
+                    const streamKey = result.streamId;
+                    
+                    document.getElementById('obsConfig').innerHTML = 
+                        `<strong>OBS配置:</strong><br>
+                         <strong>服务器:</strong> ${rtmpUrl}<br>
+                         <strong>串流密钥:</strong> ${streamKey}`;
+                    
+                    addMessage('系统', `获取推流地址成功: ${result.streamId}`);
+                    
+                } else {
+                    document.getElementById('pushUrlResult').innerHTML = 
+                        `<span style="color: red;">错误: ${result}</span>`;
+                    addMessage('错误', `获取推流地址失败: ${result}`);
+                }
+            } catch (error) {
+                document.getElementById('pushUrlResult').innerHTML = 
+                    `<span style="color: red;">请求失败: ${error.message}</span>`;
+                addMessage('错误', `请求失败: ${error.message}`);
+            }
+        }
+        
+        // 页面加载时提示
+        window.onload = function() {
+            addMessage('系统', '页面加载完成，请先输入JWT Token并连接WebSocket');
+        };
+    </script>
+</body>
+</html> 

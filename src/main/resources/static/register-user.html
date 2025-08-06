@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册 - 完整版</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 使用Unicode字符替代Bootstrap图标，避免CSP问题 -->
+    <style>
+        .icon {
+            font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+            font-size: 1.1em;
+            margin-right: 8px;
+        }
+        .icon-user:before { content: "👤"; }
+        .icon-gear:before { content: "⚙️"; }
+        .icon-package:before { content: "📦"; }
+        .icon-plus:before { content: "➕"; }
+        .icon-arrow-left:before { content: "⬅️"; }
+        .icon-check:before { content: "✅"; }
+        .icon-warning:before { content: "⚠️"; }
+        .icon-hourglass:before { content: "⏳"; }
+        .icon-login:before { content: "🚪"; }
+        .icon-currency:before { content: "💰"; }
+    </style>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .register-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 15px 40px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 15px 20px;
+        }
+        .password-strength {
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+        }
+        .strength-weak { background-color: #dc3545; }
+        .strength-medium { background-color: #ffc107; }
+        .strength-strong { background-color: #28a745; }
+        .form-text {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .section-title {
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f8f9fa;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+        .section-title i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        .section-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .field-group {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .field-group-title {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        .info-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .price-display {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .date-input-group {
+            position: relative;
+        }
+        .date-input-group .form-control {
+            padding-right: 40px;
+        }
+        .date-input-group::after {
+            content: "📅";
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="register-container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold text-primary mb-2">
+                    <span class="icon icon-plus"></span>
+                    用户注册
+                </h2>
+                <p class="text-muted">请填写完整的注册信息，带 <span class="text-danger">*</span> 的为必填项</p>
+            </div>
+
+            <form id="registerForm">
+                <!-- 基本信息 -->
+                <div class="section-card">
+                    <h5 class="section-title">
+                        <span class="icon icon-user"></span>
+                        基本信息
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="userId" class="form-label required-field">用户ID/邮箱</label>
+                            <input type="email" class="form-control" id="userId" name="userId" required 
+                                   placeholder="请输入邮箱地址">
+                            <div class="form-text">将作为登录账号使用</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label required-field">手机号码</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" required 
+                                   pattern="^1[3-9]\d{9}$" placeholder="请输入11位手机号">
+                            <div class="form-text">格式：13812345678</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">姓名</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="请输入姓名（可选）">
+                            <div class="form-text">如不填写将自动生成</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label required-field">密码</label>
+                            <input type="password" class="form-control" id="password" name="password" required 
+                                   minlength="6" placeholder="请输入密码（至少6位）">
+                            <div class="password-strength" id="passwordStrength"></div>
+                            <div class="form-text">
+                                密码至少6位，建议包含大小写字母和数字
+                                <a href="/password-policy.html" target="_blank" class="text-decoration-none">查看密码策略</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户类型和限制 -->
+                <div class="section-card">
+                    <h5 class="section-title">
+                        <span class="icon icon-gear"></span>
+                        用户类型和限制
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="type" class="form-label">用户类型</label>
+                            <select class="form-select" id="type" name="type">
+                                <option value="register">普通用户</option>
+                                <option value="vip">VIP用户</option>
+                                <option value="enterprise">企业用户</option>
+                                <option value="admin">管理员</option>
+                            </select>
+                            <div class="form-text">选择用户类型</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="maxDevices" class="form-label">最大设备数</label>
+                            <input type="number" class="form-control" id="maxDevices" name="maxDevices" 
+                                   min="1" max="100" value="1" placeholder="最大设备数">
+                            <div class="form-text">同时在线设备数量限制</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="maxStreams" class="form-label">最大推流数</label>
+                            <input type="number" class="form-control" id="maxStreams" name="maxStreams" 
+                                   min="1" max="50" value="1" placeholder="最大推流数">
+                            <div class="form-text">同时推流数量限制</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 套餐信息 -->
+                <div class="section-card">
+                    <h5 class="section-title">
+                        <span class="icon icon-package"></span>
+                        套餐信息
+                    </h5>
+                    
+                    <!-- 套餐基本信息 -->
+                    <div class="field-group">
+                        <div class="field-group-title">套餐基本信息</div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="packageType" class="form-label">套餐类型</label>
+                                <select class="form-select" id="packageType" name="packageType">
+                                    <option value="basic">基础套餐</option>
+                                    <option value="standard">标准套餐</option>
+                                    <option value="premium">高级套餐</option>
+                                    <option value="enterprise">企业套餐</option>
+                                </select>
+                                <div class="form-text">选择套餐类型</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="packagePrice" class="form-label">套餐价格</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="packagePrice" name="packagePrice" 
+                                           min="0" step="0.01" value="0.00" placeholder="套餐价格">
+                                    <span class="input-group-text">元/月</span>
+                                </div>
+                                <div class="form-text">套餐月费</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="packageDiscount" class="form-label">折扣率</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="packageDiscount" name="packageDiscount" 
+                                           min="0" max="1" step="0.01" value="1.00" placeholder="折扣率">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <div class="form-text">折扣率（0-100%）</div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="packageMaxUsers" class="form-label">最大用户数</label>
+                                <input type="number" class="form-control" id="packageMaxUsers" name="packageMaxUsers" 
+                                       min="1" value="1" placeholder="最大用户数">
+                                <div class="form-text">套餐支持的最大用户数</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="packageDescription" class="form-label">套餐描述</label>
+                                <textarea class="form-control" id="packageDescription" name="packageDescription" 
+                                          rows="3" placeholder="请输入套餐描述"></textarea>
+                                <div class="form-text">套餐的详细描述和功能说明</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 订阅时间信息 -->
+                    <div class="field-group">
+                        <div class="field-group-title">订阅时间信息</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="subscriptionDuration" class="form-label">订阅时长</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="subscriptionDuration" name="subscriptionDuration" 
+                                           min="1" value="12" placeholder="订阅时长">
+                                    <select class="form-select" id="durationUnit" name="durationUnit" style="max-width: 80px;">
+                                        <option value="months">月</option>
+                                        <option value="days">天</option>
+                                        <option value="years">年</option>
+                                    </select>
+                                </div>
+                                <div class="form-text">订阅时长（仅用于计算，不保存到数据库）</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="autoRenew" class="form-label">自动续费</label>
+                                <select class="form-select" id="autoRenew" name="autoRenew">
+                                    <option value="false">不启用</option>
+                                    <option value="true">启用</option>
+                                </select>
+                                <div class="form-text">默认不启用自动续费</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="paymentMethod" class="form-label">支付方式</label>
+                                <select class="form-select" id="paymentMethod" name="paymentMethod">
+                                    <option value="yearly">年付</option>
+                                    <option value="monthly">月付</option>
+                                    <option value="quarterly">季付</option>
+                                    <option value="lifetime">终身</option>
+                                </select>
+                                <div class="form-text">默认年付</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="trialPeriod" class="form-label">试用期</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="trialPeriod" name="trialPeriod" 
+                                           min="0" value="0" placeholder="试用期天数">
+                                    <span class="input-group-text">天</span>
+                                </div>
+                                <div class="form-text">免费试用期天数（默认0天）</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="gracePeriod" class="form-label">宽限期</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="gracePeriod" name="gracePeriod" 
+                                           min="0" value="0" placeholder="宽限期天数">
+                                    <span class="input-group-text">天</span>
+                                </div>
+                                <div class="form-text">过期后宽限期天数（默认0天）</div>
+                            </div>
+                        </div>
+                        <!-- 计算结果显示 -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <strong>计算说明：</strong><br>
+                                    • 订阅日期：注册次日激活<br>
+                                    • 过期日期：订阅日期 + 订阅时长 + 宽限期<br>
+                                    • 最终价格：套餐价格 × 折扣率 × 支付方式倍数
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- 价格计算显示 -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="price-display" id="priceDisplay">
+                                <span class="icon icon-currency"></span>
+                                月价格：¥<span id="finalPrice">0.00</span>/月
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="price-display" id="totalPriceDisplay" style="background: linear-gradient(135deg, #fd7e14 0%, #ff8c00 100%);">
+                                <span class="icon icon-currency"></span>
+                                套餐总价：¥<span id="totalPrice">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 注册按钮 -->
+                <div class="d-grid gap-2 mt-5">
+                    <button type="submit" class="btn btn-register btn-lg">
+                        <span id="registerBtnText">
+                            <span class="icon icon-plus"></span>
+                            立即注册
+                        </span>
+                        <span id="registerBtnSpinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
+                    </button>
+                </div>
+
+                <!-- 消息显示 -->
+                <div id="messageContainer" class="mt-4"></div>
+            </form>
+
+            <!-- 返回链接 -->
+            <div class="text-center mt-4">
+                <a href="login.html" class="text-decoration-none">
+                    <span class="icon icon-arrow-left"></span>
+                    已有账号？立即登录
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 密码强度检测
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('passwordStrength');
+            
+            let strength = 0;
+            if (password.length >= 6) strength++;
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            strengthBar.className = 'password-strength';
+            if (strength <= 2) {
+                strengthBar.classList.add('strength-weak');
+            } else if (strength <= 4) {
+                strengthBar.classList.add('strength-medium');
+            } else {
+                strengthBar.classList.add('strength-strong');
+            }
+        });
+
+        // 用户类型变化时自动设置默认值
+        document.getElementById('type').addEventListener('change', function() {
+            const type = this.value;
+            const maxDevicesInput = document.getElementById('maxDevices');
+            const maxStreamsInput = document.getElementById('maxStreams');
+            
+            const defaults = {
+                'register': { devices: 1, streams: 1 },
+                'vip': { devices: 3, streams: 2 },
+                'enterprise': { devices: 10, streams: 5 },
+                'admin': { devices: 50, streams: 20 }
+            };
+            
+            if (defaults[type]) {
+                maxDevicesInput.value = defaults[type].devices;
+                maxStreamsInput.value = defaults[type].streams;
+            }
+        });
+
+        // 套餐类型变化时自动设置默认值
+        document.getElementById('packageType').addEventListener('change', function() {
+            const packageType = this.value;
+            const priceInput = document.getElementById('packagePrice');
+            const discountInput = document.getElementById('packageDiscount');
+            const descriptionInput = document.getElementById('packageDescription');
+            const maxUsersInput = document.getElementById('packageMaxUsers');
+            const trialPeriodInput = document.getElementById('trialPeriod');
+            const gracePeriodInput = document.getElementById('gracePeriod');
+            
+            const packageDefaults = {
+                'basic': { 
+                    price: 0.00, 
+                    discount: 100, 
+                    description: '基础套餐，适合个人用户使用，包含基础功能',
+                    maxUsers: 1,
+                    trialPeriod: 7,
+                    gracePeriod: 3
+                },
+                'standard': { 
+                    price: 29.90, 
+                    discount: 100, 
+                    description: '标准套餐，适合小团队使用，包含更多功能',
+                    maxUsers: 5,
+                    trialPeriod: 14,
+                    gracePeriod: 7
+                },
+                'premium': { 
+                    price: 99.90, 
+                    discount: 95, 
+                    description: '高级套餐，适合中型企业使用，包含高级功能',
+                    maxUsers: 20,
+                    trialPeriod: 30,
+                    gracePeriod: 15
+                },
+                'enterprise': { 
+                    price: 299.90, 
+                    discount: 90, 
+                    description: '企业套餐，适合大型企业使用，包含所有功能',
+                    maxUsers: 100,
+                    trialPeriod: 60,
+                    gracePeriod: 30
+                }
+            };
+            
+            if (packageDefaults[packageType]) {
+                const defaults = packageDefaults[packageType];
+                priceInput.value = defaults.price;
+                discountInput.value = defaults.discount;
+                descriptionInput.value = defaults.description;
+                maxUsersInput.value = defaults.maxUsers;
+                trialPeriodInput.value = defaults.trialPeriod;
+                gracePeriodInput.value = defaults.gracePeriod;
+                
+                // 更新价格显示
+                updatePriceDisplay();
+            }
+        });
+
+        // 价格、折扣、支付方式变化时更新显示
+        document.getElementById('packagePrice').addEventListener('input', updatePriceDisplay);
+        document.getElementById('packageDiscount').addEventListener('input', updatePriceDisplay);
+        document.getElementById('paymentMethod').addEventListener('change', updatePriceDisplay);
+
+        // 更新价格显示
+        function updatePriceDisplay() {
+            const price = parseFloat(document.getElementById('packagePrice').value) || 0;
+            const discount = parseFloat(document.getElementById('packageDiscount').value) || 100;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            
+            // 计算月价格
+            const monthlyPrice = price * (discount / 100);
+            document.getElementById('finalPrice').textContent = monthlyPrice.toFixed(2);
+            
+            // 计算套餐总价
+            let multiplier = 1;
+            switch (paymentMethod) {
+                case 'monthly':
+                    multiplier = 1;
+                    break;
+                case 'quarterly':
+                    multiplier = 3;
+                    break;
+                case 'yearly':
+                    multiplier = 12;
+                    break;
+                case 'lifetime':
+                    multiplier = 120; // 假设终身为10年
+                    break;
+            }
+            
+            const totalPrice = monthlyPrice * multiplier;
+            document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
+        }
+
+
+
+        // 表单提交处理
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const btnText = document.getElementById('registerBtnText');
+            const btnSpinner = document.getElementById('registerBtnSpinner');
+            const messageContainer = document.getElementById('messageContainer');
+            
+            // 显示加载状态
+            submitBtn.disabled = true;
+            btnText.innerHTML = '<span class="icon icon-hourglass"></span> 注册中...';
+            btnSpinner.style.display = 'inline-block';
+            messageContainer.innerHTML = '';
+            
+            try {
+                // 收集表单数据
+                const formData = {
+                    userId: document.getElementById('userId').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    name: document.getElementById('name').value.trim(),
+                    password: document.getElementById('password').value,
+                    type: document.getElementById('type').value,
+                    maxDevices: parseInt(document.getElementById('maxDevices').value),
+                    maxStreams: parseInt(document.getElementById('maxStreams').value),
+                    // 套餐信息
+                    userPackage: {
+                        type: document.getElementById('packageType').value,
+                        price: parseFloat(document.getElementById('packagePrice').value),
+                        discount: parseFloat(document.getElementById('packageDiscount').value),
+                        description: document.getElementById('packageDescription').value.trim(),
+                        maxUsers: parseInt(document.getElementById('packageMaxUsers').value),
+                        subscriptionDuration: parseInt(document.getElementById('subscriptionDuration').value),
+                        durationUnit: document.getElementById('durationUnit').value,
+                        autoRenew: document.getElementById('autoRenew').value === 'true',
+                        paymentMethod: document.getElementById('paymentMethod').value,
+                        trialPeriod: parseInt(document.getElementById('trialPeriod').value),
+                        gracePeriod: parseInt(document.getElementById('gracePeriod').value)
+                    }
+                };
+                
+                // 验证必填字段
+                if (!formData.userId || !formData.phone || !formData.password) {
+                    throw new Error('请填写所有必填字段');
+                }
+                
+                // 验证手机号格式
+                if (!/^1[3-9]\d{9}$/.test(formData.phone)) {
+                    throw new Error('请输入正确的手机号格式');
+                }
+                
+                // 验证密码强度
+                if (formData.password.length < 6) {
+                    throw new Error('密码长度至少6位');
+                }
+                
+
+                
+                // 发送注册请求
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.text();
+                
+                if (response.ok) {
+                    // 注册成功
+                    messageContainer.innerHTML = `
+                        <div class="alert alert-success">
+                            <span class="icon icon-check"></span>
+                            <strong>注册成功！</strong><br>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <strong>用户信息：</strong><br>
+                                    用户ID: ${formData.userId}<br>
+                                    手机号: ${formData.phone}<br>
+                                    用户类型: ${getTypeDisplayName(formData.type)}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>套餐信息：</strong><br>
+                                    套餐类型: ${getPackageTypeDisplayName(formData.userPackage.type)}<br>
+                                    订阅时长: ${formData.userPackage.subscriptionDuration}${getDurationUnitDisplayName(formData.userPackage.durationUnit)}<br>
+                                    支付方式: ${getPaymentMethodDisplayName(formData.userPackage.paymentMethod)}<br>
+                                    自动续费: ${formData.userPackage.autoRenew ? '启用' : '不启用'}<br>
+                                    月价格: ¥${(formData.userPackage.price * formData.userPackage.discount / 100).toFixed(2)}/月
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="login.html" class="btn btn-outline-success btn-sm">
+                                    <span class="icon icon-login"></span>
+                                    点击这里登录
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 清空表单
+                    document.getElementById('registerForm').reset();
+                    document.getElementById('passwordStrength').className = 'password-strength';
+                    updatePriceDisplay();
+                    
+                } else {
+                    // 注册失败
+                    throw new Error(result || '注册失败，请稍后重试');
+                }
+                
+            } catch (error) {
+                // 显示错误信息
+                messageContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <span class="icon icon-warning"></span>
+                        <strong>注册失败：</strong>${error.message}
+                    </div>
+                `;
+            } finally {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                btnText.innerHTML = '<span class="icon icon-plus"></span> 立即注册';
+                btnSpinner.style.display = 'none';
+            }
+        });
+        
+        // 获取用户类型显示名称
+        function getTypeDisplayName(type) {
+            const typeNames = {
+                'register': '普通用户',
+                'vip': 'VIP用户',
+                'enterprise': '企业用户',
+                'admin': '管理员'
+            };
+            return typeNames[type] || type;
+        }
+        
+        // 获取套餐类型显示名称
+        function getPackageTypeDisplayName(type) {
+            const packageTypeNames = {
+                'basic': '基础套餐',
+                'standard': '标准套餐',
+                'premium': '高级套餐',
+                'enterprise': '企业套餐'
+            };
+            return packageTypeNames[type] || type;
+        }
+        
+        // 获取时长单位显示名称
+        function getDurationUnitDisplayName(unit) {
+            const unitNames = {
+                'days': '天',
+                'months': '月',
+                'years': '年'
+            };
+            return unitNames[unit] || unit;
+        }
+        
+        // 获取支付方式显示名称
+        function getPaymentMethodDisplayName(method) {
+            const methodNames = {
+                'monthly': '月付',
+                'quarterly': '季付',
+                'yearly': '年付',
+                'lifetime': '终身'
+            };
+            return methodNames[method] || method;
+        }
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 触发用户类型变化事件，设置默认值
+            document.getElementById('type').dispatchEvent(new Event('change'));
+            
+            // 触发套餐类型变化事件，设置默认值
+            document.getElementById('packageType').dispatchEvent(new Event('change'));
+            
+            // 更新价格显示
+            updatePriceDisplay();
+        });
+    </script>
+</body>
+</html>

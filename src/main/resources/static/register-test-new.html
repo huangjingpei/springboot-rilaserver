@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新注册功能测试</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .test-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 1000px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .test-result {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #2196f3;
+        }
+        .price-display {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .total-price-display {
+            background: linear-gradient(135deg, #fd7e14 0%, #ff8c00 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="test-container">
+            <h2 class="text-center mb-4">新注册功能测试</h2>
+            
+            <!-- 功能说明 -->
+            <div class="test-section">
+                <h4>功能更新说明</h4>
+                <ul>
+                    <li><strong>订阅时长</strong>：不再保存到数据库，仅用于前端计算</li>
+                    <li><strong>自动续费</strong>：默认不启用，保存到数据库</li>
+                    <li><strong>支付方式</strong>：默认年付，保存到数据库</li>
+                    <li><strong>激活时间</strong>：注册次日激活，试用期和宽限期累加到日期计算中</li>
+                    <li><strong>价格计算</strong>：套餐总价 = 月价格 × 支付方式倍数</li>
+                </ul>
+            </div>
+
+            <!-- 测试用例 -->
+            <div class="test-section">
+                <h4>测试用例</h4>
+                
+                <!-- 基础套餐测试 -->
+                <div class="mb-4">
+                    <h5>基础套餐测试</h5>
+                    <button class="btn btn-primary" onclick="testBasicPackage()">测试基础套餐</button>
+                    <div id="basicResult" class="test-result" style="display: none;"></div>
+                </div>
+
+                <!-- 标准套餐测试 -->
+                <div class="mb-4">
+                    <h5>标准套餐测试</h5>
+                    <button class="btn btn-success" onclick="testStandardPackage()">测试标准套餐</button>
+                    <div id="standardResult" class="test-result" style="display: none;"></div>
+                </div>
+
+                <!-- 高级套餐测试 -->
+                <div class="mb-4">
+                    <h5>高级套餐测试</h5>
+                    <button class="btn btn-warning" onclick="testPremiumPackage()">测试高级套餐</button>
+                    <div id="premiumResult" class="test-result" style="display: none;"></div>
+                </div>
+
+                <!-- 企业套餐测试 -->
+                <div class="mb-4">
+                    <h5>企业套餐测试</h5>
+                    <button class="btn btn-danger" onclick="testEnterprisePackage()">测试企业套餐</button>
+                    <div id="enterpriseResult" class="test-result" style="display: none;"></div>
+                </div>
+
+                <!-- 自定义测试 -->
+                <div class="mb-4">
+                    <h5>自定义测试</h5>
+                    <button class="btn btn-info" onclick="testCustomPackage()">测试自定义套餐</button>
+                    <div id="customResult" class="test-result" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- 价格计算器 -->
+            <div class="test-section">
+                <h4>价格计算器</h4>
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">套餐价格</label>
+                        <input type="number" class="form-control" id="calcPrice" value="29.90" step="0.01">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">折扣率(%)</label>
+                        <input type="number" class="form-control" id="calcDiscount" value="100" min="0" max="100">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">支付方式</label>
+                        <select class="form-select" id="calcPaymentMethod">
+                            <option value="monthly">月付</option>
+                            <option value="quarterly">季付</option>
+                            <option value="yearly" selected>年付</option>
+                            <option value="lifetime">终身</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-primary d-block w-100" onclick="calculatePrice()">计算价格</button>
+                    </div>
+                </div>
+                <div id="priceCalculation" class="mt-3"></div>
+            </div>
+
+            <!-- 数据库字段说明 -->
+            <div class="test-section">
+                <h4>数据库字段说明</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>字段名</th>
+                                <th>类型</th>
+                                <th>默认值</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>auto_renew</td>
+                                <td>BOOLEAN</td>
+                                <td>FALSE</td>
+                                <td>自动续费，默认不启用</td>
+                            </tr>
+                            <tr>
+                                <td>payment_method</td>
+                                <td>VARCHAR(20)</td>
+                                <td>'yearly'</td>
+                                <td>支付方式，默认年付</td>
+                            </tr>
+                            <tr>
+                                <td>trial_period</td>
+                                <td>INT</td>
+                                <td>0</td>
+                                <td>试用期天数，默认0</td>
+                            </tr>
+                            <tr>
+                                <td>grace_period</td>
+                                <td>INT</td>
+                                <td>0</td>
+                                <td>宽限期天数，默认0</td>
+                            </tr>
+                            <tr>
+                                <td>total_price</td>
+                                <td>DECIMAL(10,2)</td>
+                                <td>NULL</td>
+                                <td>套餐总价（价格 × 订阅时长）</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 测试基础套餐
+        function testBasicPackage() {
+            const testData = {
+                userId: 'test-basic@example.com',
+                phone: '13800000001',
+                name: '测试用户-基础',
+                password: '123456',
+                type: 'register',
+                maxDevices: 1,
+                maxStreams: 1,
+                userPackage: {
+                    type: 'basic',
+                    price: 0.00,
+                    discount: 100,
+                    description: '基础套餐，适合个人用户使用',
+                    maxUsers: 1,
+                    subscriptionDuration: 12,
+                    durationUnit: 'months',
+                    autoRenew: false,
+                    paymentMethod: 'yearly',
+                    trialPeriod: 0,
+                    gracePeriod: 0
+                }
+            };
+            
+            performTest(testData, 'basicResult', '基础套餐');
+        }
+
+        // 测试标准套餐
+        function testStandardPackage() {
+            const testData = {
+                userId: 'test-standard@example.com',
+                phone: '13800000002',
+                name: '测试用户-标准',
+                password: '123456',
+                type: 'vip',
+                maxDevices: 3,
+                maxStreams: 2,
+                userPackage: {
+                    type: 'standard',
+                    price: 29.90,
+                    discount: 100,
+                    description: '标准套餐，适合小团队使用',
+                    maxUsers: 5,
+                    subscriptionDuration: 12,
+                    durationUnit: 'months',
+                    autoRenew: false,
+                    paymentMethod: 'yearly',
+                    trialPeriod: 7,
+                    gracePeriod: 3
+                }
+            };
+            
+            performTest(testData, 'standardResult', '标准套餐');
+        }
+
+        // 测试高级套餐
+        function testPremiumPackage() {
+            const testData = {
+                userId: 'test-premium@example.com',
+                phone: '13800000003',
+                name: '测试用户-高级',
+                password: '123456',
+                type: 'enterprise',
+                maxDevices: 10,
+                maxStreams: 5,
+                userPackage: {
+                    type: 'premium',
+                    price: 99.90,
+                    discount: 95,
+                    description: '高级套餐，适合中型企业使用',
+                    maxUsers: 20,
+                    subscriptionDuration: 12,
+                    durationUnit: 'months',
+                    autoRenew: true,
+                    paymentMethod: 'yearly',
+                    trialPeriod: 14,
+                    gracePeriod: 7
+                }
+            };
+            
+            performTest(testData, 'premiumResult', '高级套餐');
+        }
+
+        // 测试企业套餐
+        function testEnterprisePackage() {
+            const testData = {
+                userId: 'test-enterprise@example.com',
+                phone: '13800000004',
+                name: '测试用户-企业',
+                password: '123456',
+                type: 'enterprise',
+                maxDevices: 50,
+                maxStreams: 20,
+                userPackage: {
+                    type: 'enterprise',
+                    price: 299.90,
+                    discount: 90,
+                    description: '企业套餐，适合大型企业使用',
+                    maxUsers: 100,
+                    subscriptionDuration: 12,
+                    durationUnit: 'months',
+                    autoRenew: true,
+                    paymentMethod: 'yearly',
+                    trialPeriod: 30,
+                    gracePeriod: 15
+                }
+            };
+            
+            performTest(testData, 'enterpriseResult', '企业套餐');
+        }
+
+        // 测试自定义套餐
+        function testCustomPackage() {
+            const testData = {
+                userId: 'test-custom@example.com',
+                phone: '13800000005',
+                name: '测试用户-自定义',
+                password: '123456',
+                type: 'vip',
+                maxDevices: 5,
+                maxStreams: 3,
+                userPackage: {
+                    type: 'custom',
+                    price: 50.00,
+                    discount: 80,
+                    description: '自定义套餐测试',
+                    maxUsers: 10,
+                    subscriptionDuration: 6,
+                    durationUnit: 'months',
+                    autoRenew: true,
+                    paymentMethod: 'quarterly',
+                    trialPeriod: 10,
+                    gracePeriod: 5
+                }
+            };
+            
+            performTest(testData, 'customResult', '自定义套餐');
+        }
+
+        // 执行测试
+        async function performTest(testData, resultId, packageName) {
+            const resultDiv = document.getElementById(resultId);
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="text-center">测试中...</div>';
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.text();
+                
+                if (response.ok) {
+                    // 计算价格
+                    const monthlyPrice = testData.userPackage.price * (testData.userPackage.discount / 100);
+                    let multiplier = 1;
+                    switch (testData.userPackage.paymentMethod) {
+                        case 'monthly': multiplier = 1; break;
+                        case 'quarterly': multiplier = 3; break;
+                        case 'yearly': multiplier = 12; break;
+                        case 'lifetime': multiplier = 120; break;
+                    }
+                    const totalPrice = monthlyPrice * multiplier;
+
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <h6>✅ ${packageName}测试成功</h6>
+                            <strong>用户信息：</strong><br>
+                            • 用户ID: ${testData.userId}<br>
+                            • 手机号: ${testData.phone}<br>
+                            • 用户类型: ${getTypeDisplayName(testData.type)}<br>
+                            • 最大设备数: ${testData.maxDevices}<br>
+                            • 最大推流数: ${testData.maxStreams}<br><br>
+                            
+                            <strong>套餐信息：</strong><br>
+                            • 套餐类型: ${testData.userPackage.type}<br>
+                            • 订阅时长: ${testData.userPackage.subscriptionDuration}${getDurationUnitDisplayName(testData.userPackage.durationUnit)}<br>
+                            • 支付方式: ${getPaymentMethodDisplayName(testData.userPackage.paymentMethod)}<br>
+                            • 自动续费: ${testData.userPackage.autoRenew ? '启用' : '不启用'}<br>
+                            • 试用期: ${testData.userPackage.trialPeriod}天<br>
+                            • 宽限期: ${testData.userPackage.gracePeriod}天<br><br>
+                            
+                            <strong>价格信息：</strong><br>
+                            • 原价: ¥${testData.userPackage.price}/月<br>
+                            • 折扣率: ${testData.userPackage.discount}%<br>
+                            • 月价格: ¥${monthlyPrice.toFixed(2)}/月<br>
+                            • 套餐总价: ¥${totalPrice.toFixed(2)}<br><br>
+                            
+                            <strong>计算说明：</strong><br>
+                            • 订阅日期: 注册次日激活<br>
+                            • 过期日期: 订阅日期 + ${testData.userPackage.subscriptionDuration}${getDurationUnitDisplayName(testData.userPackage.durationUnit)} + ${testData.userPackage.gracePeriod}天宽限期
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h6>❌ ${packageName}测试失败</h6>
+                            <strong>错误信息：</strong>${result}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6>❌ ${packageName}测试异常</h6>
+                        <strong>异常信息：</strong>${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 价格计算器
+        function calculatePrice() {
+            const price = parseFloat(document.getElementById('calcPrice').value) || 0;
+            const discount = parseFloat(document.getElementById('calcDiscount').value) || 100;
+            const paymentMethod = document.getElementById('calcPaymentMethod').value;
+            
+            const monthlyPrice = price * (discount / 100);
+            
+            let multiplier = 1;
+            let multiplierText = '';
+            switch (paymentMethod) {
+                case 'monthly':
+                    multiplier = 1;
+                    multiplierText = '1个月';
+                    break;
+                case 'quarterly':
+                    multiplier = 3;
+                    multiplierText = '3个月';
+                    break;
+                case 'yearly':
+                    multiplier = 12;
+                    multiplierText = '12个月';
+                    break;
+                case 'lifetime':
+                    multiplier = 120;
+                    multiplierText = '120个月(10年)';
+                    break;
+            }
+            
+            const totalPrice = monthlyPrice * multiplier;
+            
+            document.getElementById('priceCalculation').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="price-display">
+                            月价格：¥${monthlyPrice.toFixed(2)}/月
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="total-price-display">
+                            套餐总价：¥${totalPrice.toFixed(2)} (${multiplierText})
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <strong>计算过程：</strong><br>
+                    • 原价: ¥${price}/月<br>
+                    • 折扣率: ${discount}%<br>
+                    • 月价格: ¥${price} × ${discount}% = ¥${monthlyPrice.toFixed(2)}/月<br>
+                    • 套餐总价: ¥${monthlyPrice.toFixed(2)} × ${multiplier} = ¥${totalPrice.toFixed(2)}
+                </div>
+            `;
+        }
+
+        // 辅助函数
+        function getTypeDisplayName(type) {
+            const typeNames = {
+                'register': '普通用户',
+                'vip': 'VIP用户',
+                'enterprise': '企业用户',
+                'admin': '管理员'
+            };
+            return typeNames[type] || type;
+        }
+
+        function getDurationUnitDisplayName(unit) {
+            const unitNames = {
+                'days': '天',
+                'months': '月',
+                'years': '年'
+            };
+            return unitNames[unit] || unit;
+        }
+
+        function getPaymentMethodDisplayName(method) {
+            const methodNames = {
+                'monthly': '月付',
+                'quarterly': '季付',
+                'yearly': '年付',
+                'lifetime': '终身'
+            };
+            return methodNames[method] || method;
+        }
+
+        // 页面加载完成后初始化价格计算器
+        document.addEventListener('DOMContentLoaded', function() {
+            calculatePrice();
+        });
+    </script>
+</body>
+</html> 

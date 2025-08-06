@@ -1,0 +1,7 @@
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" rx="12" fill="#007bff" opacity="0.1"/>
+  <rect x="20" y="20" width="40" height="40" rx="8" fill="#007bff" opacity="0.2"/>
+  <rect x="28" y="28" width="24" height="24" rx="4" fill="#007bff"/>
+  <circle cx="40" cy="40" r="6" fill="white"/>
+  <text x="40" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="white" font-weight="bold">APP</text>
+</svg> 

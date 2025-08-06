@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推流限制管理测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>推流限制管理测试</h1>
+        
+        <div class="section">
+            <h3>检查推流限制</h3>
+            <div class="form-group">
+                <label for="checkUserId">用户ID:</label>
+                <input type="text" id="checkUserId" placeholder="输入用户ID">
+            </div>
+            <button onclick="checkStreamLimit()">检查推流限制</button>
+            <div id="checkResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h3>获取推流统计</h3>
+            <div class="form-group">
+                <label for="statsUserId">用户ID:</label>
+                <input type="text" id="statsUserId" placeholder="输入用户ID">
+            </div>
+            <button onclick="getStreamStats()">获取统计信息</button>
+            <div id="statsResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h3>更新推流限制（管理员功能）</h3>
+            <div class="form-group">
+                <label for="updateUserId">用户ID:</label>
+                <input type="text" id="updateUserId" placeholder="输入用户ID">
+            </div>
+            <div class="form-group">
+                <label for="newMaxStreams">新的最大推流数:</label>
+                <input type="number" id="newMaxStreams" min="1" max="100" placeholder="1-100">
+            </div>
+            <button onclick="updateStreamLimit()">更新限制</button>
+            <div id="updateResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h3>用户类型默认配置</h3>
+            <div class="info">
+                <strong>推流数量限制配置：</strong><br>
+                • 普通用户 (register): 1个推流<br>
+                • 授权用户 (auth): 5个推流<br>
+                • 企业用户 (enterprise): 20个推流<br><br>
+                <strong>设备数量限制配置：</strong><br>
+                • 普通用户 (register): 1个设备<br>
+                • 授权用户 (auth): 20个设备<br>
+                • 企业用户 (enterprise): 100个设备
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkStreamLimit() {
+            const userId = document.getElementById('checkUserId').value;
+            const resultDiv = document.getElementById('checkResult');
+            
+            if (!userId) {
+                showResult(resultDiv, '请输入用户ID', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/stream-limits/check/${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const result = `检查结果：
+允许推流: ${data.allowed ? '是' : '否'}
+状态消息: ${data.message}
+状态代码: ${data.code}
+当前推流数: ${data.currentStreams}
+最大推流数: ${data.maxStreams}`;
+                    showResult(resultDiv, result, data.allowed ? 'success' : 'error');
+                } else {
+                    showResult(resultDiv, `检查失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function getStreamStats() {
+            const userId = document.getElementById('statsUserId').value;
+            const resultDiv = document.getElementById('statsResult');
+            
+            if (!userId) {
+                showResult(resultDiv, '请输入用户ID', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/stream-limits/stats/${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.data;
+                    const statsHtml = `
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.currentStreams}</div>
+                                <div class="stat-label">当前推流数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.maxStreams}</div>
+                                <div class="stat-label">最大推流数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.maxDevices}</div>
+                                <div class="stat-label">最大设备数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stats.usagePercentage}%</div>
+                                <div class="stat-label">使用率</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <strong>用户信息：</strong><br>
+                            用户ID: ${stats.userId}<br>
+                            用户名: ${stats.userName}<br>
+                            用户类型: ${stats.userType}<br>
+                            可开始新推流: ${stats.canStartNewStream ? '是' : '否'}
+                        </div>
+                    `;
+                    resultDiv.innerHTML = statsHtml;
+                    resultDiv.className = 'result success';
+                    resultDiv.style.display = 'block';
+                } else {
+                    showResult(resultDiv, `获取统计失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function updateStreamLimit() {
+            const userId = document.getElementById('updateUserId').value;
+            const maxStreams = document.getElementById('newMaxStreams').value;
+            const resultDiv = document.getElementById('updateResult');
+            
+            if (!userId || !maxStreams) {
+                showResult(resultDiv, '请输入用户ID和新的推流数限制', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/stream-limits/update/${encodeURIComponent(userId)}?maxStreams=${maxStreams}`, {
+                    method: 'PUT'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const result = `更新成功！
+用户ID: ${data.userId}
+新的最大推流数: ${data.newMaxStreams}`;
+                    showResult(resultDiv, result, 'success');
+                } else {
+                    showResult(resultDiv, `更新失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(resultDiv, `请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(element, message, type) {
+            element.textContent = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        // 页面加载时设置默认值
+        window.onload = function() {
+            document.getElementById('checkUserId').value = 'huangjingpei@gmail.com';
+            document.getElementById('statsUserId').value = 'huangjingpei@gmail.com';
+            document.getElementById('updateUserId').value = 'huangjingpei@gmail.com';
+            document.getElementById('newMaxStreams').value = '2';
+        };
+    </script>
+</body>
+</html> 

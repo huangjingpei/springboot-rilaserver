@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>推流测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .url-display {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>推流测试页面</h1>
+    
+    <div class="section">
+        <h2>1. 获取推流地址</h2>
+        <button onclick="getPushUrl()">获取推流地址</button>
+        <div id="pushUrlResult" class="url-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. 推流配置（用于OBS）</h2>
+        <div id="obsConfig" class="url-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. 获取播放地址</h2>
+        <input type="text" id="streamId" placeholder="输入流ID" style="width: 300px; padding: 5px;">
+        <button onclick="getPlayUrl()">获取播放地址</button>
+        <div id="playUrlResult" class="url-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. 播放测试</h2>
+        <button onclick="playHLS()">播放HLS</button>
+        <button onclick="playFLV()">播放FLV</button>
+        <button onclick="playRTMP()">播放RTMP</button>
+        <div id="videoContainer"></div>
+    </div>
+
+    <script>
+        let currentStreamId = '';
+        let currentPushUrl = '';
+        
+        // 获取JWT token（这里需要你手动设置）
+        function getToken() {
+            // 从localStorage或sessionStorage获取token
+            return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+        }
+        
+        // 获取推流地址
+        async function getPushUrl() {
+            const token = getToken();
+            if (!token) {
+                alert('请先登录获取JWT token');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/zlm/getPushUrl', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    currentStreamId = result.streamId;
+                    currentPushUrl = result.pushUrl;
+                    
+                    document.getElementById('pushUrlResult').innerHTML = 
+                        `<strong>推流地址:</strong> ${result.pushUrl}<br>
+                         <strong>流ID:</strong> ${result.streamId}<br>
+                         <strong>用户ID:</strong> ${result.userId}`;
+                    
+                    // 显示OBS配置
+                    const rtmpUrl = result.pushUrl.substring(0, result.pushUrl.lastIndexOf('/'));
+                    const streamKey = result.streamId;
+                    
+                    document.getElementById('obsConfig').innerHTML = 
+                        `<strong>OBS配置:</strong><br>
+                         <strong>服务器:</strong> ${rtmpUrl}<br>
+                         <strong>串流密钥:</strong> ${streamKey}`;
+                    
+                    // 自动填充流ID到播放测试
+                    document.getElementById('streamId').value = result.streamId;
+                    
+                } else {
+                    document.getElementById('pushUrlResult').innerHTML = 
+                        `<span class="error">错误: ${result}</span>`;
+                }
+            } catch (error) {
+                document.getElementById('pushUrlResult').innerHTML = 
+                    `<span class="error">请求失败: ${error.message}</span>`;
+            }
+        }
+        
+        // 获取播放地址
+        async function getPlayUrl() {
+            const streamId = document.getElementById('streamId').value;
+            if (!streamId) {
+                alert('请输入流ID');
+                return;
+            }
+            
+            const token = getToken();
+            if (!token) {
+                alert('请先登录获取JWT token');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/zlm/getPlayUrl/${streamId}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('playUrlResult').innerHTML = 
+                        `<strong>RTMP:</strong> ${result.rtmpUrl}<br>
+                         <strong>HLS:</strong> ${result.hlsUrl}<br>
+                         <strong>FLV:</strong> ${result.flvUrl}<br>
+                         <strong>状态:</strong> ${result.status}`;
+                } else {
+                    document.getElementById('playUrlResult').innerHTML = 
+                        `<span class="error">错误: ${result}</span>`;
+                }
+            } catch (error) {
+                document.getElementById('playUrlResult').innerHTML = 
+                    `<span class="error">请求失败: ${error.message}</span>`;
+            }
+        }
+        
+        // 播放HLS
+        function playHLS() {
+            const streamId = document.getElementById('streamId').value;
+            if (!streamId) {
+                alert('请输入流ID');
+                return;
+            }
+            
+            const hlsUrl = `${window.location.protocol}//${window.location.host}/live/${streamId}.live.m3u8`;
+            playVideo(hlsUrl, 'hls');
+        }
+        
+        // 播放FLV
+        function playFLV() {
+            const streamId = document.getElementById('streamId').value;
+            if (!streamId) {
+                alert('请输入流ID');
+                return;
+            }
+            
+            const flvUrl = `${window.location.protocol}//${window.location.host}/live/${streamId}.live.flv`;
+            playVideo(flvUrl, 'flv');
+        }
+        
+        // 播放RTMP
+        function playRTMP() {
+            const streamId = document.getElementById('streamId').value;
+            if (!streamId) {
+                alert('请输入流ID');
+                return;
+            }
+            
+            const rtmpUrl = `rtmp://${window.location.hostname}:1935/live/${streamId}`;
+            alert(`RTMP地址: ${rtmpUrl}\n请使用支持RTMP的播放器（如VLC）播放`);
+        }
+        
+        // 播放视频
+        function playVideo(url, type) {
+            const container = document.getElementById('videoContainer');
+            container.innerHTML = '';
+            
+            if (type === 'hls') {
+                // 使用video.js播放HLS
+                const video = document.createElement('video');
+                video.controls = true;
+                video.style.width = '100%';
+                video.style.maxWidth = '640px';
+                video.style.height = 'auto';
+                
+                const source = document.createElement('source');
+                source.src = url;
+                source.type = 'application/x-mpegURL';
+                
+                video.appendChild(source);
+                container.appendChild(video);
+                
+                // 尝试播放
+                video.play().catch(e => {
+                    console.log('自动播放失败，需要用户手动点击播放');
+                });
+                
+            } else if (type === 'flv') {
+                // FLV需要特殊处理，这里简单显示链接
+                container.innerHTML = `
+                    <p>FLV播放地址: <a href="${url}" target="_blank">${url}</a></p>
+                    <p>请使用支持FLV的播放器播放</p>
+                `;
+            }
+        }
+        
+        // 页面加载时检查token
+        window.onload = function() {
+            const token = getToken();
+            if (!token) {
+                alert('请先登录获取JWT token，然后刷新此页面');
+            }
+        };
+    </script>
+</body>
+</html> 

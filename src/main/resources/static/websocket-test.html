@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Chat</title>
+  <style>
+    .container { margin: 20px; }
+    .input-group { margin-bottom: 10px; }
+    label { display: inline-block; width: 100px; }
+    input, select, button { margin-right: 10px; }
+    #log { height: 200px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 登录区域 -->
+    <h2>Live Chat Login</h2>
+    <div class="input-group">
+      <label>User ID:</label>
+      <input type="text" id="userId" value="user1">
+    </div>
+    <div class="input-group">
+      <label>Role:</label>
+      <select id="role">
+        <option value="proxy">Proxy</option>
+        <option value="anchor">Anchor</option>
+        <option value="controller">Controller</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>Password:</label>
+      <input type="password" id="password" value="default123">
+    </div>
+    <div class="input-group">
+      <label>Room ID:</label>
+      <input type="text" id="roomId" value="123">
+    </div>
+    <button onclick="login()">Login</button>
+
+    <!-- 消息发送区域 -->
+    <h2>Messages</h2>
+    <div class="input-group">
+      <input type="text" id="message" disabled>
+      <button onclick="sendMessage()" disabled>Send</button>
+    </div>
+    <div id="log"></div>
+
+    <!-- isUserInRoom 测试区域 -->
+    <h2>Test isUserInRoom</h2>
+    <div class="input-group">
+      <label>Test User ID:</label>
+      <input type="text" id="testUserId" placeholder="Enter User ID">
+    </div>
+    <div class="input-group">
+      <label>Test Room ID:</label>
+      <input type="text" id="testRoomId" placeholder="Enter Room ID">
+    </div>
+    <button onclick="testIsUserInRoom()">Check User in Room</button>
+    <div id="testResult"></div>
+    <div id="currentTime"></div>
+  </div>
+
+  <script>
+    let ws;
+    let token;
+    let assignedId;
+    let userId;
+
+    function log(message) {
+      const logDiv = document.getElementById('log');
+      logDiv.innerHTML += message + '<br>';
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function updateCurrentTime() {
+      const now = new Date();
+      const timeString = now.toLocaleString();
+      document.getElementById('currentTime').innerHTML = `Current Time: ${timeString}`;
+    }
+
+    async function login() {
+      userId = document.getElementById('userId').value;
+      const role = document.getElementById('role').value;
+      const password = document.getElementById('password').value;
+      const roomId = document.getElementById('roomId').value || 'default';
+
+      try {
+        const response = await fetch('/ws/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, role, password, roomId }),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+        const data = await response.json();
+        if (data.token) {
+          token = data.token;
+          connectWebSocket(roomId);
+        } else {
+          throw new Error('No token received');
+        }
+      } catch (error) {
+        alert('Login failed: ' + error.message);
+        console.error('Login error:', error);
+      }
+    }
+
+    function connectWebSocket(roomId) {
+      ws = new WebSocket(`ws://${window.location.hostname}:8080/ws?token=${token}&roomId=${roomId}`);
+      ws.onopen = () => {
+        document.getElementById('message').disabled = false;
+        document.getElementById('message').nextElementSibling.disabled = false;
+        log('Connected to server');
+      };
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.assignedId !== undefined) {
+            assignedId = data.assignedId;
+            log(`Assigned ID: ${assignedId}`);
+          }
+          if (data.type === 'userList') {
+            log(`User list received: ${JSON.stringify(data.users)}`);
+          } else if (data.type === 'userEvent') {
+            log(`${data.action === 'join' ? 'Joined' : 'Left'}: #${data.assignedId} (${data.role})`);
+          } else if (data.type === 'bullet') {
+            log(`[BULLET] #${data.assignedId}: ${data.content}`);
+          } else if (data.type === 'system') {
+            log(`[SYSTEM] ${data.message}`);
+          } else {
+            log(`[${data.type}] ${JSON.stringify(data)}`);
+          }
+        } catch (error) {
+          log(`Error parsing message: ${error.message}`);
+        }
+      };
+      ws.onclose = (event) => {
+        log(`Disconnected from server: code=${event.code}, reason=${event.reason}`);
+      };
+      ws.onerror = (error) => {
+        log(`WebSocket error: ${error.message || error}`);
+      };
+    }
+
+    function sendMessage() {
+      const content = document.getElementById('message').value;
+      if (!content) {
+        log('Error: Message content is empty');
+        return;
+      }
+      if (ws.readyState !== WebSocket.OPEN) {
+        log('Error: WebSocket is not open');
+        return;
+      }
+      const message = { type: 'bullet', content };
+      ws.send(JSON.stringify(message));
+      document.getElementById('message').value = '';
+    }
+
+    async function testIsUserInRoom() {
+      const testUserId = document.getElementById('testUserId').value;
+      const testRoomId = document.getElementById('testRoomId').value;
+      if (!testUserId || !testRoomId) {
+        document.getElementById('testResult').innerHTML = 'Please enter both User ID and Room ID';
+        return;
+      }
+      try {
+        const response = await fetch(`/ws/isUserInRoom?userId=${testUserId}&roomId=${testRoomId}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+        const data = await response.json();
+        document.getElementById('testResult').innerHTML = 
+          `User ${testUserId} in room ${testRoomId}: ${data.exists ? 'Yes' : 'No'}`;
+      } catch (error) {
+        document.getElementById('testResult').innerHTML = `Error: ${error.message}`;
+      }
+    }
+
+    window.onload = () => {
+      updateCurrentTime();
+      setInterval(updateCurrentTime, 1000);
+    };
+  </script>
+</body>
+</html>

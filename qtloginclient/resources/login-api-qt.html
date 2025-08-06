@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录 - Qt客户端版本</title>
+    <link href="qrc:///resources/css/bootstrap.min.css" rel="stylesheet">
+    <link href="qrc:///resources/css/local-icons.css" rel="stylesheet">
+    <style>
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 30px;
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        .loading {
+            display: none;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        .token-display {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        /* 页面切换动画 */
+        .page-transition {
+            animation: pageTransition 0.3s ease-in-out;
+        }
+        
+        @keyframes pageTransition {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+
+    <!-- QT INTEGRATION START: Step 1 -->
+    <!-- 使用Qt资源系统中的qwebchannel.js -->
+    <script src="qrc:///resources/qwebchannel.js"></script>
+    <!-- QT INTEGRATION END: Step 1 -->
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="form-container">
+            <div class="card" id="loginCard">
+                <div class="card-header text-center">
+                    <h2><i class="fas fa-sign-in-alt me-2"></i>用户登录</h2>
+                    <p class="mb-0">Qt客户端版本</p>
+                </div>
+                <div class="card-body p-4">
+                    <!-- 成功消息 -->
+                    <div id="successAlert" class="alert alert-success" style="display: none;">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span id="successMessage"></span>
+                    </div>
+                    
+                    <!-- 错误消息 -->
+                    <div id="errorAlert" class="alert alert-danger" style="display: none;">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <span id="errorMessage"></span>
+                    </div>
+
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="userId" class="form-label">
+                                <i class="fas fa-envelope me-2"></i>用户ID（邮箱）
+                            </label>
+                            <input type="email" class="form-control" id="userId" name="userId" 
+                                   placeholder="请输入邮箱地址" required>
+                            <div class="invalid-feedback" id="userIdError"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>密码
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="请输入密码" required>
+                            <div class="invalid-feedback" id="passwordError"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="deviceId" class="form-label">
+                                <i class="fas fa-mobile-alt me-2"></i>设备ID（可选）
+                            </label>
+                            <input type="text" class="form-control" id="deviceId" name="deviceId" 
+                                   placeholder="留空自动生成">
+                        </div>
+
+                        <!-- 记住密码选项 -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
+                            <label class="form-check-label" for="rememberMe">
+                                <i class="fas fa-save me-1"></i>记住用户名和密码
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <span class="loading">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    登录中...
+                                </span>
+                                <span class="normal">
+                                    <i class="fas fa-sign-in-alt me-2"></i>立即登录
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- 清除保存的登录信息 -->
+                        <div class="text-center mt-2">
+                            <button type="button" class="btn btn-link btn-sm text-muted" onclick="clearSavedCredentials()">
+                                <i class="fas fa-trash me-1"></i>清除保存的登录信息
+                            </button>
+                            <button type="button" class="btn btn-link btn-sm text-muted" onclick="testQtBridge()">
+                                <i class="fas fa-bug me-1"></i>测试Qt Bridge
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <span class="text-muted">还没有账号？</span>
+                            <a href="#" class="text-decoration-none" onclick="openRegisterPage()">
+                                <i class="fas fa-user-plus me-1"></i>立即注册
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- 登录成功后的Token显示 -->
+                    <div id="tokenSection" style="display: none;">
+                        <hr>
+                        <h5><i class="fas fa-key me-2"></i>登录成功！</h5>
+                        <p class="text-muted">您的JWT Token：</p>
+                        <div id="tokenDisplay" class="token-display"></div>
+                        <div class="mt-3">
+                            <button class="btn btn-outline-primary btn-sm" onclick="copyToken()">
+                                <i class="fas fa-copy me-1"></i>复制Token
+                            </button>
+                            <button class="btn btn-outline-success btn-sm ms-2" onclick="testWithToken()">
+                                <i class="fas fa-test me-1"></i>测试API
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="qrc:///resources/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentToken = null;
+        let qtBridge = null;
+
+        // 页面加载完成后初始化Qt连接
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，开始初始化Qt连接...');
+            initializeQtBridge();
+        });
+
+        // 页面完全加载后加载凭据
+        window.addEventListener('load', function() {
+            console.log('页面完全加载完成，开始加载凭据...');
+            // 延迟一点时间确保所有元素都已渲染
+            setTimeout(loadSavedCredentials, 50);
+        });
+
+        /**
+         * 初始化Qt Bridge连接
+         */
+        function initializeQtBridge() {
+            console.log('开始初始化Qt Bridge...');
+            
+            // 检查QWebChannel和qt对象是否可用
+            if (typeof QWebChannel === 'undefined') {
+                console.log('QWebChannel不可用，等待加载...');
+                setTimeout(initializeQtBridge, 100);
+                return;
+            }
+            
+            if (typeof qt === 'undefined') {
+                console.log('qt对象不可用，等待加载...');
+                setTimeout(initializeQtBridge, 100);
+                return;
+            }
+            
+            console.log('QWebChannel和qt对象都可用了，创建通道...');
+            
+            // 创建WebChannel
+            new QWebChannel(qt.webChannelTransport, function(channel) {
+                console.log('Channel created successfully:', channel);
+                console.log('Available objects:', Object.keys(channel.objects));
+                
+                // 获取loginBridge对象
+                qtBridge = channel.objects.loginBridge;
+                
+                if (qtBridge) {
+                    console.log('loginBridge found:', qtBridge);
+                    console.log('loginBridge methods:', Object.getOwnPropertyNames(qtBridge));
+                    
+                    // 连接信号
+                    qtBridge.credentialsLoaded.connect(function(userId, password, rememberMe) {
+                        console.log('Credentials loaded signal received:', userId, password, rememberMe);
+                        fillSavedCredentials(userId, password, rememberMe);
+                    });
+                    
+                    // 页面切换时重置凭据加载状态
+                    window.addEventListener('beforeunload', function() {
+                        credentialsLoaded = false;
+                    });
+                    
+                } else {
+                    console.log('loginBridge not found in channel objects');
+                }
+            });
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 重置表单验证状态
+            resetValidation();
+            
+            // 手动验证必填字段
+            const userId = document.getElementById('userId').value.trim();
+            const password = document.getElementById('password').value.trim();
+            let hasError = false;
+            
+            // 验证邮箱
+            if (!userId) {
+                document.getElementById('userId').classList.add('is-invalid');
+                document.getElementById('userIdError').textContent = '请输入邮箱地址';
+                hasError = true;
+            } else if (!isValidEmail(userId)) {
+                document.getElementById('userId').classList.add('is-invalid');
+                document.getElementById('userIdError').textContent = '请输入有效的邮箱地址';
+                hasError = true;
+            }
+            
+            // 验证密码
+            if (!password) {
+                document.getElementById('password').classList.add('is-invalid');
+                document.getElementById('passwordError').textContent = '请输入密码';
+                hasError = true;
+            }
+            
+            if (hasError) {
+                return;
+            }
+            
+            // 显示加载状态
+            setLoading(true);
+            
+            // 收集表单数据
+            const formData = {
+                userId: userId,
+                password: password,
+                deviceId: document.getElementById('deviceId').value.trim() || null
+            };
+            
+            console.log('登录表单数据:', formData);
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8080/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    currentToken = result.token;
+                    showSuccess(result.message || '登录成功！');
+                    
+                    // 保存凭据（如果选择记住）
+                    const rememberMe = document.getElementById('rememberMe').checked;
+                    if (rememberMe && qtBridge && qtBridge.saveCredentials) {
+                        try {
+                            qtBridge.saveCredentials(userId, password);
+                            console.log('Credentials saved');
+                        } catch (error) {
+                            console.error('Error saving credentials:', error);
+                        }
+                    } else if (!rememberMe && qtBridge && qtBridge.clearCredentials) {
+                        try {
+                            qtBridge.clearCredentials();
+                            console.log('Credentials cleared');
+                        } catch (error) {
+                            console.error('Error clearing credentials:', error);
+                        }
+                    }
+                    
+                    // 显示Token
+                    showTokenSection();
+                    
+                } else {
+                    showError(result.message || '登录失败，请重试');
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showError('网络错误，请检查网络连接');
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        function setLoading(loading) {
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingSpan = submitBtn.querySelector('.loading');
+            const normalSpan = submitBtn.querySelector('.normal');
+            
+            if (loading) {
+                loadingSpan.style.display = 'inline';
+                normalSpan.style.display = 'none';
+                submitBtn.disabled = true;
+            } else {
+                loadingSpan.style.display = 'none';
+                normalSpan.style.display = 'inline';
+                submitBtn.disabled = false;
+            }
+        }
+        
+        function showSuccess(message) {
+            hideAlerts();
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successAlert').style.display = 'block';
+        }
+        
+        function showError(message) {
+            hideAlerts();
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorAlert').style.display = 'block';
+        }
+        
+        function hideAlerts() {
+            document.getElementById('successAlert').style.display = 'none';
+            document.getElementById('errorAlert').style.display = 'none';
+        }
+        
+        function resetValidation() {
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+        }
+        
+        function showTokenSection() {
+            document.getElementById('tokenDisplay').textContent = currentToken;
+            document.getElementById('tokenSection').style.display = 'block';
+        }
+        
+        function copyToken() {
+            if (currentToken) {
+                navigator.clipboard.writeText(currentToken).then(() => {
+                    alert('Token已复制到剪贴板！');
+                }).catch(() => {
+                    // 降级方案
+                    const textArea = document.createElement('textarea');
+                    textArea.value = currentToken;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Token已复制到剪贴板！');
+                });
+            }
+        }
+        
+        function testWithToken() {
+            if (currentToken) {
+                // 这里可以添加测试API的逻辑
+                alert('Token测试功能待实现');
+            }
+        }
+        
+        // 实时验证
+        document.getElementById('userId').addEventListener('blur', function() {
+            const email = this.value;
+            if (email && !isValidEmail(email)) {
+                this.classList.add('is-invalid');
+                document.getElementById('userIdError').textContent = '请输入有效的邮箱地址';
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // ==================== 记住密码功能 ====================
+        
+        let credentialsLoaded = false; // 防止重复加载
+        
+        /**
+         * 从本地存储加载登录凭据
+         */
+        function loadSavedCredentials() {
+            // 防止重复调用
+            if (credentialsLoaded) {
+                console.log('凭据已加载，跳过重复调用');
+                return;
+            }
+            
+            try {
+                if (qtBridge) {
+                    // 使用Qt的LoginBridge加载凭据（同步调用）
+                    console.log('调用qtBridge.loadCredentials()');
+                    const credentials = qtBridge.loadCredentials();
+                    console.log('loadCredentials返回:', credentials);
+                    
+                    if (credentials && credentials.hasCredentials) {
+                        // 使用fillSavedCredentials函数填充凭据
+                        fillSavedCredentials(credentials.userId, credentials.password, credentials.rememberMe);
+                        console.log('已加载保存的登录信息（Qt版本）');
+                    } else {
+                        console.log('没有找到保存的登录信息（Qt版本）');
+                    }
+                } else {
+                    console.log('Qt Bridge不可用，无法加载保存的登录信息');
+                }
+                
+                credentialsLoaded = true; // 标记已加载
+            } catch (error) {
+                console.error('加载保存的登录信息失败:', error);
+                credentialsLoaded = true; // 即使失败也标记为已加载，避免无限重试
+            }
+        }
+        
+        /**
+         * 填充保存的凭据到表单
+         */
+        function fillSavedCredentials(userId, password, rememberMe) {
+            console.log('fillSavedCredentials called');
+            
+            try {
+                // 确保DOM元素存在
+                const userIdInput = document.getElementById('userId');
+                const passwordInput = document.getElementById('password');
+                const rememberMeInput = document.getElementById('rememberMe');
+                
+                if (!userIdInput || !passwordInput || !rememberMeInput) {
+                    console.log('DOM元素未准备好，延迟填充凭据');
+                    setTimeout(() => fillSavedCredentials(userId, password, rememberMe), 100);
+                    return;
+                }
+                
+                if (userId && password) {
+                    console.log('Found saved credentials, loading...');
+                    userIdInput.value = userId;
+                    passwordInput.value = password;
+                    rememberMeInput.checked = rememberMe || false;
+                    console.log('Loaded credentials - userId:', userId, 'password:', password);
+                    console.log('Credentials filled automatically');
+                } else {
+                    console.log('No saved credentials found');
+                }
+            } catch (error) {
+                console.error('Error filling saved credentials:', error);
+            }
+        }
+        
+        /**
+         * 清除保存的登录凭据
+         */
+        function clearSavedCredentials() {
+            try {
+                if (qtBridge) {
+                    // 使用Qt的LoginBridge清除凭据
+                    qtBridge.clearCredentials();
+                    console.log('Qt Bridge清除凭据调用完成');
+                } else {
+                    console.log('Qt Bridge不可用，无法清除凭据');
+                }
+                
+                // 清空表单
+                document.getElementById('userId').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('rememberMe').checked = false;
+                
+                console.log('已清除保存的登录信息');
+                
+                // 显示提示信息
+                showSuccess('已清除保存的登录信息');
+            } catch (error) {
+                console.error('清除登录信息失败:', error);
+            }
+        }
+        
+        /**
+         * 检查是否有保存的登录信息
+         * @returns {boolean} 是否有保存的登录信息
+         */
+        function hasSavedCredentials() {
+            if (qtBridge) {
+                try {
+                    return qtBridge.hasSavedCredentials();
+                } catch (error) {
+                    console.error('检查保存的登录信息失败:', error);
+                    return false;
+                }
+            } else {
+                console.log('Qt Bridge不可用，无法检查保存的登录信息');
+                return false;
+            }
+        }
+        
+        // 页面加载时检查是否有保存的登录信息
+        document.addEventListener('DOMContentLoaded', function() {
+            if (hasSavedCredentials()) {
+                console.log('检测到保存的登录信息');
+            }
+        });
+
+        /**
+         * 打开注册页面
+         */
+        function openRegisterPage() {
+            console.log('openRegisterPage called, qtBridge:', qtBridge);
+            
+            // 重置凭据加载状态，为页面切换做准备
+            credentialsLoaded = false;
+            
+            // 显示页面切换动画
+            showPageTransition();
+            
+            if (qtBridge && typeof qtBridge.openRegisterPage === 'function') {
+                console.log('Calling qtBridge.openRegisterPage()');
+                qtBridge.openRegisterPage();
+            } else {
+                console.log('qtBridge not available, trying relative path navigation');
+                // 尝试相对路径跳转作为备用方案
+                try {
+                    window.location.href = './register-api-qt.html';
+                } catch (error) {
+                    console.log('Relative path navigation failed:', error);
+                    showError('注册功能需要联系管理员');
+                }
+            }
+        }
+        
+        // 显示页面切换动画
+        function showPageTransition() {
+            const card = document.getElementById('loginCard');
+            if (card) {
+                card.classList.add('page-transition');
+                
+                // 动画结束后移除类
+                setTimeout(() => {
+                    card.classList.remove('page-transition');
+                }, 300);
+            }
+        }
+
+        // 全局调试函数
+        function debugQtBridge() {
+            console.log('=== Qt Bridge Debug Info ===');
+            console.log('qtBridge object:', qtBridge);
+            console.log('QWebChannel available:', typeof QWebChannel !== 'undefined');
+            console.log('qt object available:', typeof qt !== 'undefined');
+            if (qtBridge) {
+                console.log('qtBridge methods:', Object.getOwnPropertyNames(qtBridge));
+                console.log('openRegisterPage method:', typeof qtBridge.openRegisterPage);
+                console.log('backToLogin method:', typeof qtBridge.backToLogin);
+                console.log('onLoginSuccess method:', typeof qtBridge.onLoginSuccess);
+            }
+            console.log('===========================');
+        }
+
+        // 测试Qt Bridge功能（可在控制台调用）
+        function testQtBridge() {
+            console.log('=== 测试Qt Bridge功能 ===');
+            if (!qtBridge) {
+                console.log('Qt Bridge不可用');
+                return;
+            }
+            
+            console.log('测试保存凭据...');
+            qtBridge.saveCredentials('test@example.com', 'testpassword');
+            
+            console.log('测试加载凭据...');
+            const credentials = qtBridge.loadCredentials();
+            console.log('加载的凭据:', credentials);
+            
+            console.log('测试检查凭据...');
+            const hasCredentials = qtBridge.hasSavedCredentials();
+            console.log('是否有保存的凭据:', hasCredentials);
+            
+            console.log('测试清除凭据...');
+            qtBridge.clearCredentials();
+            
+            console.log('再次检查凭据...');
+            const hasCredentialsAfterClear = qtBridge.hasSavedCredentials();
+            console.log('清除后是否有凭据:', hasCredentialsAfterClear);
+            
+            console.log('=== 测试完成 ===');
+        }
+
+        // 手动检查Qt Bridge状态（可在控制台调用）
+        function checkQtBridgeStatus() {
+            console.log('=== Manual Qt Bridge Check ===');
+            console.log('qtBridge object:', qtBridge);
+            console.log('qtBridge type:', typeof qtBridge);
+            console.log('QWebChannel available:', typeof QWebChannel !== 'undefined');
+            console.log('qt object available:', typeof qt !== 'undefined');
+            if (qtBridge) {
+                console.log('qtBridge methods:', Object.getOwnPropertyNames(qtBridge));
+                console.log('openRegisterPage method:', typeof qtBridge.openRegisterPage);
+                console.log('backToLogin method:', typeof qtBridge.backToLogin);
+                console.log('onLoginSuccess method:', typeof qtBridge.onLoginSuccess);
+            } else {
+                console.log('qtBridge is null or undefined');
+                console.log('Attempting to reinitialize...');
+                initializeQtBridge();
+            }
+            console.log('=============================');
+        }
+    </script>
+</body>
+</html> 

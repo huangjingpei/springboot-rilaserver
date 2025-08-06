@@ -24,11 +24,11 @@ public class AuthController {
         this.userService = userService;
     }
 
-    // handler method to handle home page request
-    @GetMapping("/index")
-    public String home() {
-        return "index";
-    }
+    // handler method to handle home page request - 已移至LoginPageController
+    // @GetMapping("/index")
+    // public String home() {
+    //     return "index";
+    // }
 
     // handler method to handle user registration form request
     @GetMapping("/register")
@@ -44,9 +44,9 @@ public class AuthController {
     public String registration(@Valid @ModelAttribute("user") UserDto userDto,
                                BindingResult result,
                                Model model) {
-        User existingUser = userService.findUserByEmail(userDto.getEmail());
+        User existingUser = userService.findUserByEmail(userDto.getUserId());
 
-        if (existingUser != null && existingUser.getEmail() != null && !existingUser.getEmail().isEmpty()) {
+        if (existingUser != null && existingUser.getUserId() != null && !existingUser.getUserId().isEmpty()) {
             result.rejectValue("email", null,
                     "There is already an account registered with the same email");
         }
@@ -60,17 +60,17 @@ public class AuthController {
         return "redirect:/register?success";
     }
 
-    // handler method to handle list of users
-    @GetMapping("/users")
-    public String users(Model model) {
-        List<UserDto> users = userService.findAllUsers();
-        model.addAttribute("users", users);
-        return "users";
-    }
+    // handler method to handle list of users - 已移至LoginPageController
+    // @GetMapping("/users")
+    // public String users(Model model) {
+    //     List<UserDto> users = userService.findAllUsers();
+    //     model.addAttribute("users", users);
+    //     return "users";
+    // }
 
     // handler method to handle login request
-    @GetMapping("/login")
-    public String login() {
+    @GetMapping("/form-login")
+    public String loginPage() {
         return "login";
     }
 }

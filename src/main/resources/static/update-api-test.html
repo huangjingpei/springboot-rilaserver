@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>升级API测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; }
+        input, select { padding: 5px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>升级API测试页面</h1>
+    
+    <div class="test-section">
+        <h3>1. 检查更新测试</h3>
+        <input type="text" id="currentVersion" value="1.0.0" placeholder="当前版本">
+        <select id="platform">
+            <option value="windows-x64">Windows x64</option>
+            <option value="macos-x64">macOS x64</option>
+            <option value="linux-x64">Linux x64</option>
+            <option value="1">测试平台1</option>
+        </select>
+        <button onclick="testCheckUpdate()">检查更新</button>
+        <div id="checkResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. 下载链接测试</h3>
+        <input type="text" id="downloadVersion" value="1.2.3" placeholder="版本号">
+        <select id="downloadPlatform">
+            <option value="windows-x64">Windows x64</option>
+            <option value="macos-x64">macOS x64</option>
+            <option value="linux-x64">Linux x64</option>
+            <option value="1">测试平台1</option>
+        </select>
+        <button onclick="testDownload()">测试下载</button>
+        <button onclick="testDirectDownload()">直接下载</button>
+        <div id="downloadResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. 版本验证测试</h3>
+        <input type="text" id="validateVersion" value="1.2.3" placeholder="版本号">
+        <button onclick="testValidateVersion()">验证版本</button>
+        <div id="validateResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. 强制更新查询</h3>
+        <select id="mandatoryPlatform">
+            <option value="windows-x64">Windows x64</option>
+            <option value="macos-x64">macOS x64</option>
+            <option value="linux-x64">Linux x64</option>
+            <option value="1">测试平台1</option>
+        </select>
+        <button onclick="testMandatoryUpdates()">查询强制更新</button>
+        <div id="mandatoryResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1/updates';
+        
+        // 检查更新
+        async function testCheckUpdate() {
+            const currentVersion = document.getElementById('currentVersion').value;
+            const platform = document.getElementById('platform').value;
+            const resultDiv = document.getElementById('checkResult');
+            
+            resultDiv.innerHTML = '<span class="info">正在检查更新...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/latest?currentVersion=${currentVersion}&platform=${platform}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">✓ 检查更新成功</span><br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ 检查更新失败: ${error.message}</span>`;
+                console.error('检查更新错误:', error);
+            }
+        }
+        
+        // 测试下载链接
+        async function testDownload() {
+            const version = document.getElementById('downloadVersion').value;
+            const platform = document.getElementById('downloadPlatform').value;
+            const resultDiv = document.getElementById('downloadResult');
+            
+            resultDiv.innerHTML = '<span class="info">正在测试下载链接...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/download/${version}?platform=${platform}`, {
+                    method: 'GET',
+                    redirect: 'manual' // 不自动跟随重定向
+                });
+                
+                resultDiv.innerHTML = `<span class="success">✓ 下载链接测试成功</span><br>
+                    <span class="info">状态码: ${response.status}</span><br>
+                    <span class="info">Location: ${response.headers.get('Location') || '无重定向'}</span>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ 下载链接测试失败: ${error.message}</span>`;
+                console.error('下载测试错误:', error);
+            }
+        }
+        
+        // 直接下载测试
+        async function testDirectDownload() {
+            const version = document.getElementById('downloadVersion').value;
+            const platform = document.getElementById('downloadPlatform').value;
+            const resultDiv = document.getElementById('downloadResult');
+            
+            resultDiv.innerHTML = '<span class="info">正在测试直接下载...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/file/${version}?platform=${platform}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                resultDiv.innerHTML = `<span class="success">✓ 直接下载测试成功</span><br>
+                    <span class="info">Content-Type: ${response.headers.get('Content-Type')}</span><br>
+                    <span class="info">Content-Length: ${response.headers.get('Content-Length')}</span>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ 直接下载测试失败: ${error.message}</span>`;
+                console.error('直接下载错误:', error);
+            }
+        }
+        
+        // 版本验证
+        async function testValidateVersion() {
+            const version = document.getElementById('validateVersion').value;
+            const resultDiv = document.getElementById('validateResult');
+            
+            resultDiv.innerHTML = '<span class="info">正在验证版本号...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/validate-version?version=${version}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">✓ 版本验证完成</span><br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ 版本验证失败: ${error.message}</span>`;
+                console.error('版本验证错误:', error);
+            }
+        }
+        
+        // 强制更新查询
+        async function testMandatoryUpdates() {
+            const platform = document.getElementById('mandatoryPlatform').value;
+            const resultDiv = document.getElementById('mandatoryResult');
+            
+            resultDiv.innerHTML = '<span class="info">正在查询强制更新...</span>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/mandatory/${platform}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">✓ 强制更新查询完成</span><br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ 强制更新查询失败: ${error.message}</span>`;
+                console.error('强制更新查询错误:', error);
+            }
+        }
+        
+        // 页面加载时自动测试
+        window.onload = function() {
+            console.log('升级API测试页面已加载');
+            console.log('当前API基础路径:', API_BASE);
+        };
+    </script>
+</body>
+</html> 

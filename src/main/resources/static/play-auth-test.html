@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>播放鉴权测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .result-display {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .url-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .url-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 3px;
+            border-left: 4px solid #007bff;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>播放鉴权测试页面</h1>
+    
+    <div class="section">
+        <h2>1. 认证信息</h2>
+        <div>
+            <label>JWT Token: </label>
+            <input type="text" id="jwtToken" placeholder="请输入JWT Token" style="width: 400px;">
+            <button onclick="loadTokenFromStorage()">从存储加载</button>
+        </div>
+        <div>
+            <label>流ID: </label>
+            <input type="text" id="streamId" placeholder="请输入流ID" style="width: 300px;">
+        </div>
+        <div id="authStatus" class="status info">请先输入认证信息</div>
+    </div>
+    
+    <div class="section">
+        <h2>2. 播放地址获取</h2>
+        <button onclick="getPlayUrl()">获取播放地址</button>
+        <button onclick="checkStreamStatus()">检查流状态</button>
+        <div id="playUrlResult" class="result-display"></div>
+        <div id="playUrls" class="url-list" style="display: none;">
+            <h3>播放地址列表：</h3>
+            <div id="urlList"></div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>3. 播放令牌管理</h2>
+        <div>
+            <label>过期时间(小时): </label>
+            <input type="number" id="expireHours" value="24" min="1" max="168">
+            <button onclick="generatePlayToken()">生成播放令牌</button>
+        </div>
+        <div>
+            <label>播放令牌: </label>
+            <input type="text" id="playToken" placeholder="播放令牌" style="width: 400px;">
+            <button onclick="validatePlayToken()">验证令牌</button>
+        </div>
+        <div id="tokenResult" class="result-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. 带鉴权参数的播放地址</h2>
+        <button onclick="generateAuthUrls()">生成带鉴权的播放地址</button>
+        <div id="authUrls" class="url-list" style="display: none;">
+            <h3>带鉴权参数的播放地址：</h3>
+            <div id="authUrlList"></div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>5. 视频播放测试</h2>
+        <div>
+            <select id="playProtocol">
+                <option value="hls">HLS播放</option>
+                <option value="flv">FLV播放</option>
+            </select>
+            <button onclick="startPlay()">开始播放</button>
+            <button onclick="stopPlay()">停止播放</button>
+        </div>
+        <div id="videoContainer"></div>
+        <div id="playStatus" class="status info">等待播放</div>
+    </div>
+    
+    <div class="section">
+        <h2>6. 鉴权测试日志</h2>
+        <button onclick="clearLog()">清空日志</button>
+        <div id="testLog" class="result-display" style="height: 200px; overflow-y: auto;"></div>
+    </div>
+
+    <script>
+        let currentPlayUrls = {};
+        let currentPlayToken = '';
+        
+        // 加载JWT Token
+        function loadTokenFromStorage() {
+            const token = localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
+            if (token) {
+                document.getElementById('jwtToken').value = token;
+                updateAuthStatus('success', 'JWT Token已加载');
+            } else {
+                updateAuthStatus('error', '未找到存储的JWT Token');
+            }
+        }
+        
+        // 更新认证状态
+        function updateAuthStatus(type, message) {
+            const statusDiv = document.getElementById('authStatus');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+        
+        // 记录测试日志
+        function logTest(type, message) {
+            const logDiv = document.getElementById('testLog');
+            const time = new Date().toLocaleTimeString();
+            const logEntry = `[${time}] ${type.toUpperCase()}: ${message}\n`;
+            logDiv.textContent = logEntry + logDiv.textContent;
+        }
+        
+        // 获取播放地址
+        async function getPlayUrl() {
+            const token = document.getElementById('jwtToken').value;
+            const streamId = document.getElementById('streamId').value;
+            
+            if (!token || !streamId) {
+                updateResult('playUrlResult', 'error', '请输入JWT Token和流ID');
+                return;
+            }
+            
+            try {
+                logTest('info', `获取播放地址: streamId=${streamId}`);
+                
+                const response = await fetch(`/api/play/getPlayUrl/${streamId}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    currentPlayUrls = {
+                        rtmp: result.rtmpUrl,
+                        hls: result.hlsUrl,
+                        flv: result.flvUrl,
+                        webrtc: result.webrtcUrl
+                    };
+                    
+                    if (result.playToken) {
+                        currentPlayToken = result.playToken;
+                        document.getElementById('playToken').value = result.playToken;
+                    }
+                    
+                    updateResult('playUrlResult', 'success', JSON.stringify(result, null, 2));
+                    displayPlayUrls();
+                    logTest('success', '播放地址获取成功');
+                } else {
+                    updateResult('playUrlResult', 'error', JSON.stringify(result, null, 2));
+                    logTest('error', `播放地址获取失败: ${result.message || '未知错误'}`);
+                }
+            } catch (error) {
+                updateResult('playUrlResult', 'error', `请求失败: ${error.message}`);
+                logTest('error', `播放地址获取异常: ${error.message}`);
+            }
+        }
+        
+        // 检查流状态
+        async function checkStreamStatus() {
+            const streamId = document.getElementById('streamId').value;
+            
+            if (!streamId) {
+                updateResult('playUrlResult', 'error', '请输入流ID');
+                return;
+            }
+            
+            try {
+                logTest('info', `检查流状态: streamId=${streamId}`);
+                
+                const response = await fetch(`/api/play/checkStream/${streamId}`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const status = result.playable ? '可播放' : '不可播放';
+                    updateResult('playUrlResult', result.playable ? 'success' : 'warning', 
+                        `流状态: ${status}\n${JSON.stringify(result, null, 2)}`);
+                    logTest('info', `流状态检查完成: ${status}`);
+                } else {
+                    updateResult('playUrlResult', 'error', JSON.stringify(result, null, 2));
+                    logTest('error', '流状态检查失败');
+                }
+            } catch (error) {
+                updateResult('playUrlResult', 'error', `请求失败: ${error.message}`);
+                logTest('error', `流状态检查异常: ${error.message}`);
+            }
+        }
+        
+        // 生成播放令牌
+        async function generatePlayToken() {
+            const token = document.getElementById('jwtToken').value;
+            const streamId = document.getElementById('streamId').value;
+            const expireHours = parseInt(document.getElementById('expireHours').value) || 24;
+            
+            if (!token || !streamId) {
+                updateResult('tokenResult', 'error', '请输入JWT Token和流ID');
+                return;
+            }
+            
+            try {
+                logTest('info', `生成播放令牌: streamId=${streamId}, expireHours=${expireHours}`);
+                
+                const response = await fetch('/api/play/generatePlayToken', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        streamId: streamId,
+                        expireHours: expireHours
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    currentPlayToken = result.playToken;
+                    document.getElementById('playToken').value = result.playToken;
+                    updateResult('tokenResult', 'success', JSON.stringify(result, null, 2));
+                    logTest('success', '播放令牌生成成功');
+                } else {
+                    updateResult('tokenResult', 'error', JSON.stringify(result, null, 2));
+                    logTest('error', `播放令牌生成失败: ${result.message || '未知错误'}`);
+                }
+            } catch (error) {
+                updateResult('tokenResult', 'error', `请求失败: ${error.message}`);
+                logTest('error', `播放令牌生成异常: ${error.message}`);
+            }
+        }
+        
+        // 验证播放令牌
+        async function validatePlayToken() {
+            const playToken = document.getElementById('playToken').value;
+            const streamId = document.getElementById('streamId').value;
+            
+            if (!playToken || !streamId) {
+                updateResult('tokenResult', 'error', '请输入播放令牌和流ID');
+                return;
+            }
+            
+            try {
+                logTest('info', `验证播放令牌: streamId=${streamId}`);
+                
+                const response = await fetch('/api/play/validatePlayToken', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        playToken: playToken,
+                        streamId: streamId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const status = result.valid ? '有效' : '无效';
+                    updateResult('tokenResult', result.valid ? 'success' : 'warning', 
+                        `令牌状态: ${status}\n${JSON.stringify(result, null, 2)}`);
+                    logTest('info', `播放令牌验证完成: ${status}`);
+                } else {
+                    updateResult('tokenResult', 'error', JSON.stringify(result, null, 2));
+                    logTest('error', '播放令牌验证失败');
+                }
+            } catch (error) {
+                updateResult('tokenResult', 'error', `请求失败: ${error.message}`);
+                logTest('error', `播放令牌验证异常: ${error.message}`);
+            }
+        }
+        
+        // 生成带鉴权参数的播放地址
+        function generateAuthUrls() {
+            const streamId = document.getElementById('streamId').value;
+            const playToken = document.getElementById('playToken').value;
+            const jwtToken = document.getElementById('jwtToken').value;
+            
+            if (!streamId) {
+                updateResult('authUrls', 'error', '请输入流ID');
+                return;
+            }
+            
+            const token = getUserIdFromToken(jwtToken);
+            const authParams = [];
+            
+            if (token) {
+                authParams.push(`userId=${encodeURIComponent(token)}`);
+            }
+            
+            if (playToken) {
+                authParams.push(`playToken=${encodeURIComponent(playToken)}`);
+            }
+            
+            const paramString = authParams.length > 0 ? '?' + authParams.join('&') : '';
+            
+            const authUrls = {
+                rtmp: `rtmp://${window.location.hostname}:1935/live/${streamId}${paramString}`,
+                hls: `${window.location.protocol}//${window.location.host}/live/${streamId}.live.m3u8${paramString}`,
+                flv: `${window.location.protocol}//${window.location.host}/live/${streamId}.live.flv${paramString}`,
+                webrtc: `webrtc://${window.location.host}/live/${streamId}${paramString}`
+            };
+            
+            displayAuthUrls(authUrls);
+            logTest('success', '带鉴权参数的播放地址已生成');
+        }
+        
+        // 开始播放
+        function startPlay() {
+            const protocol = document.getElementById('playProtocol').value;
+            const streamId = document.getElementById('streamId').value;
+            
+            if (!streamId) {
+                updatePlayStatus('error', '请输入流ID');
+                return;
+            }
+            
+            let playUrl;
+            if (protocol === 'hls') {
+                playUrl = `${window.location.protocol}//${window.location.host}/live/${streamId}.live.m3u8`;
+            } else if (protocol === 'flv') {
+                playUrl = `${window.location.protocol}//${window.location.host}/live/${streamId}.live.flv`;
+            }
+            
+            if (playUrl) {
+                playVideo(playUrl, protocol);
+                logTest('info', `开始播放: protocol=${protocol}, url=${playUrl}`);
+            }
+        }
+        
+        // 停止播放
+        function stopPlay() {
+            const container = document.getElementById('videoContainer');
+            container.innerHTML = '';
+            updatePlayStatus('info', '播放已停止');
+            logTest('info', '播放已停止');
+        }
+        
+        // 播放视频
+        function playVideo(url, type) {
+            const container = document.getElementById('videoContainer');
+            container.innerHTML = '';
+            
+            if (type === 'hls') {
+                const video = document.createElement('video');
+                video.controls = true;
+                video.autoplay = true;
+                video.muted = true; // 自动播放需要静音
+                
+                const source = document.createElement('source');
+                source.src = url;
+                source.type = 'application/x-mpegURL';
+                
+                video.appendChild(source);
+                container.appendChild(video);
+                
+                video.addEventListener('loadstart', () => updatePlayStatus('info', '开始加载视频...'));
+                video.addEventListener('canplay', () => updatePlayStatus('success', 'HLS视频可以播放'));
+                video.addEventListener('error', (e) => updatePlayStatus('error', `HLS播放错误: ${e.message}`));
+                
+            } else if (type === 'flv') {
+                container.innerHTML = `
+                    <p>FLV播放地址: <a href="${url}" target="_blank">${url}</a></p>
+                    <p>请使用支持FLV的播放器（如VLC）播放该地址</p>
+                `;
+                updatePlayStatus('info', 'FLV地址已生成，请使用外部播放器');
+            }
+        }
+        
+        // 显示播放地址
+        function displayPlayUrls() {
+            const urlList = document.getElementById('urlList');
+            const urlsDiv = document.getElementById('playUrls');
+            
+            urlList.innerHTML = '';
+            
+            Object.entries(currentPlayUrls).forEach(([protocol, url]) => {
+                if (url) {
+                    const urlItem = document.createElement('div');
+                    urlItem.className = 'url-item';
+                    urlItem.innerHTML = `
+                        <strong>${protocol.toUpperCase()}:</strong><br>
+                        <span style="font-family: monospace; word-break: break-all;">${url}</span>
+                    `;
+                    urlList.appendChild(urlItem);
+                }
+            });
+            
+            urlsDiv.style.display = 'block';
+        }
+        
+        // 显示带鉴权参数的播放地址
+        function displayAuthUrls(authUrls) {
+            const authUrlList = document.getElementById('authUrlList');
+            const authUrlsDiv = document.getElementById('authUrls');
+            
+            authUrlList.innerHTML = '';
+            
+            Object.entries(authUrls).forEach(([protocol, url]) => {
+                const urlItem = document.createElement('div');
+                urlItem.className = 'url-item';
+                urlItem.innerHTML = `
+                    <strong>${protocol.toUpperCase()} (带鉴权):</strong><br>
+                    <span style="font-family: monospace; word-break: break-all;">${url}</span>
+                `;
+                authUrlList.appendChild(urlItem);
+            });
+            
+            authUrlsDiv.style.display = 'block';
+        }
+        
+        // 更新结果显示
+        function updateResult(elementId, type, content) {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = `result-display ${type}`;
+        }
+        
+        // 更新播放状态
+        function updatePlayStatus(type, message) {
+            const statusDiv = document.getElementById('playStatus');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+        
+        // 从JWT token中提取用户ID
+        function getUserIdFromToken(token) {
+            if (!token) return null;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const subject = payload.sub;
+                if (subject && subject.includes('|')) {
+                    return subject.substring(0, subject.lastIndexOf('|'));
+                }
+                return subject;
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // 清空日志
+        function clearLog() {
+            document.getElementById('testLog').textContent = '';
+        }
+        
+        // 页面加载时初始化
+        window.onload = function() {
+            loadTokenFromStorage();
+            logTest('info', '播放鉴权测试页面已加载');
+        };
+    </script>
+</body>
+</html> 

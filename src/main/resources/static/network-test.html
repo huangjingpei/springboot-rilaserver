@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #28a745;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 网络连接测试</h1>
+        
+        <div class="success">
+            ✅ 如果您能看到这个页面，说明基本网络连接正常！
+        </div>
+        
+        <div class="info">
+            <strong>测试信息：</strong><br>
+            当前时间：<span id="currentTime"></span><br>
+            页面URL：<span id="currentUrl"></span><br>
+            用户代理：<span id="userAgent"></span>
+        </div>
+        
+        <h3>API连接测试</h3>
+        <button onclick="testSimpleApi()">测试简单API</button>
+        <button onclick="testDetailedApi()">测试详细API</button>
+        <button onclick="testOriginalPage()">测试原始登录页面</button>
+        
+        <div id="result"></div>
+        
+        <h3>网络信息</h3>
+        <div id="networkInfo" class="info">
+            正在检测网络信息...
+        </div>
+    </div>
+
+    <script>
+        // 显示基本信息
+        document.getElementById('currentTime').textContent = new Date().toLocaleString();
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        
+        // 获取网络信息
+        fetch('/test/ping')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('networkInfo').innerHTML = 
+                    `<strong>服务器IP:</strong> ${data.server_ip}<br>` +
+                    `<strong>客户端IP:</strong> ${data.client_ip}<br>` +
+                    `<strong>服务器名称:</strong> ${data.server_name}<br>` +
+                    `<strong>网络接口:</strong> ${JSON.stringify(data.all_interfaces, null, 2)}`;
+            })
+            .catch(error => {
+                document.getElementById('networkInfo').innerHTML = 
+                    `<span style="color: red;">获取网络信息失败: ${error.message}</span>`;
+            });
+        
+        async function testSimpleApi() {
+            const result = document.getElementById('result');
+            result.textContent = '正在测试简单API...';
+            
+            try {
+                const response = await fetch('/test/simple');
+                const text = await response.text();
+                result.textContent = `✅ 简单API测试成功:\n${text}`;
+                result.style.color = 'green';
+            } catch (error) {
+                result.textContent = `❌ 简单API测试失败:\n${error.message}`;
+                result.style.color = 'red';
+            }
+        }
+        
+        async function testDetailedApi() {
+            const result = document.getElementById('result');
+            result.textContent = '正在测试详细API...';
+            
+            try {
+                const response = await fetch('/test/ping');
+                const data = await response.json();
+                result.textContent = `✅ 详细API测试成功:\n${JSON.stringify(data, null, 2)}`;
+                result.style.color = 'green';
+            } catch (error) {
+                result.textContent = `❌ 详细API测试失败:\n${error.message}`;
+                result.style.color = 'red';
+            }
+        }
+        
+        function testOriginalPage() {
+            const result = document.getElementById('result');
+            result.textContent = '正在跳转到原始登录页面...';
+            result.style.color = 'blue';
+            
+            // 3秒后跳转
+            setTimeout(() => {
+                window.open('/login-api.html', '_blank');
+            }, 1000);
+        }
+    </script>
+</body>
+</html> 

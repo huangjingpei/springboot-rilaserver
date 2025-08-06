@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>应用商城</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .search-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem 0;
+            color: white;
+        }
+
+        .search-box {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: white;
+        }
+
+        .search-box::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .search-box:focus {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+            color: white;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .filter-btn {
+            border: 1px solid #dee2e6;
+            background: white;
+            color: var(--secondary-color);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .app-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .app-rating {
+            color: var(--warning-color);
+        }
+
+        .app-price {
+            font-weight: bold;
+            color: var(--success-color);
+        }
+
+        .app-price.free {
+            color: var(--success-color);
+        }
+
+        .app-price.paid {
+            color: var(--primary-color);
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, var(--success-color), #20c997);
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .category-badge {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .platform-badge {
+            background: var(--light-color);
+            color: var(--secondary-color);
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin: 0.1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--secondary-color);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--secondary-color);
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stats-label {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .search-section {
+                padding: 1rem 0;
+            }
+            
+            .app-card {
+                margin-bottom: 1rem;
+            }
+            
+            .filter-section {
+                padding: 0.5rem 0;
+            }
+            
+            .filter-btn {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.8rem;
+            }
+        }
+
+        .app-details-modal .modal-content {
+            border-radius: 15px;
+        }
+
+        .app-screenshots {
+            display: flex;
+            overflow-x: auto;
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        .app-screenshot {
+            width: 200px;
+            height: 350px;
+            object-fit: cover;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .review-item {
+            border-bottom: 1px solid #eee;
+            padding: 1rem 0;
+        }
+
+        .review-rating {
+            color: var(--warning-color);
+        }
+
+        .review-date {
+            color: var(--secondary-color);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-store me-2"></i>应用商城
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showFeatured()">推荐</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showLatest()">最新</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showPopular()">热门</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showFree()">免费</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 搜索区域 -->
+    <section class="search-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <h2 class="text-center mb-4">发现精彩应用</h2>
+                    <div class="input-group">
+                        <input type="text" class="form-control search-box" id="searchInput" 
+                               placeholder="搜索应用..." oninput="debounceSearch()">
+                        <button class="btn btn-light" type="button" onclick="performSearch()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 统计信息 -->
+    <section class="stats-section py-5 bg-light">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="stat-card" onclick="showAllApps()" style="cursor: pointer;">
+                        <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                        <h3 id="totalApps">0</h3>
+                        <p class="text-muted">总应用数</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-card" onclick="showFreeApps()" style="cursor: pointer;">
+                        <i class="fas fa-gift fa-3x text-success mb-3"></i>
+                        <h3 id="freeApps">0</h3>
+                        <p class="text-muted">免费应用</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-card" onclick="showTopDownloads()" style="cursor: pointer;">
+                        <i class="fas fa-star fa-3x text-warning mb-3"></i>
+                        <h3 id="featuredApps">0</h3>
+                        <p class="text-muted">推荐应用</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-card" onclick="showDownloadChart()" style="cursor: pointer;">
+                        <i class="fas fa-download fa-3x text-info mb-3"></i>
+                        <h3 id="totalDownloads">0</h3>
+                        <p class="text-muted">总下载量</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 筛选区域 -->
+    <section class="filter-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-2">应用类型</h6>
+                    <div id="typeFilters">
+                        <button class="filter-btn active" onclick="filterByType('all')">全部</button>
+                        <button class="filter-btn" onclick="filterByType('GAME')">游戏</button>
+                        <button class="filter-btn" onclick="filterByType('TOOL')">工具</button>
+                        <button class="filter-btn" onclick="filterByType('SOCIAL')">社交</button>
+                        <button class="filter-btn" onclick="filterByType('PRODUCTIVITY')">生产力</button>
+                        <button class="filter-btn" onclick="filterByType('EDUCATION')">教育</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-2">平台</h6>
+                    <div id="platformFilters">
+                        <button class="filter-btn active" onclick="filterByPlatform('all')">全部</button>
+                        <button class="filter-btn" onclick="filterByPlatform('ANDROID')">Android</button>
+                        <button class="filter-btn" onclick="filterByPlatform('IOS')">iOS</button>
+                        <button class="filter-btn" onclick="filterByPlatform('WINDOWS')">Windows</button>
+                        <button class="filter-btn" onclick="filterByPlatform('MAC')">Mac</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 应用列表 -->
+    <div class="container mt-4">
+        <div class="row" id="appsContainer">
+            <!-- 应用卡片将在这里动态生成 -->
+        </div>
+        
+        <!-- 分页 -->
+        <div class="pagination-container" id="paginationContainer">
+            <!-- 分页控件将在这里动态生成 -->
+        </div>
+    </div>
+
+    <!-- 应用详情模态框 -->
+    <div class="modal fade" id="appDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAppTitle">应用详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalAppBody">
+                    <!-- 应用详情内容将在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 下载量图表模态框 -->
+    <div class="modal fade" id="downloadChartModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">应用下载量统计</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <canvas id="downloadChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>下载量排行</h6>
+                            <div id="downloadRanking">
+                                <!-- 排行榜将在这里动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局变量
+        let currentPage = 0;
+        let currentSize = 12;
+        let currentFilters = {
+            keyword: '',
+            type: null,
+            platform: null,
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
+        };
+
+        // 默认图标配置
+        const DEFAULT_ICONS = {
+            'GAME': '/images/apps/icons/game.svg',
+            'TOOL': '/images/apps/icons/tool.svg',
+            'SOCIAL': '/images/apps/icons/social.svg',
+            'PHOTOGRAPHY': '/images/apps/icons/default.svg',
+            'PRODUCTIVITY': '/images/apps/icons/tool.svg',
+            'EDUCATION': '/images/apps/icons/default.svg',
+            'ENTERTAINMENT': '/images/apps/icons/game.svg',
+            'HEALTH': '/images/apps/icons/default.svg',
+            'FINANCE': '/images/apps/icons/tool.svg',
+            'SHOPPING': '/images/apps/icons/default.svg',
+            'TRAVEL': '/images/apps/icons/default.svg',
+            'NEWS': '/images/apps/icons/default.svg',
+            'SPORTS': '/images/apps/icons/game.svg',
+            'MUSIC': '/images/apps/icons/default.svg',
+            'VIDEO': '/images/apps/icons/default.svg',
+            'OTHER': '/images/apps/icons/default.svg',
+            'DEFAULT': '/images/apps/icons/default.svg'
+        };
+
+        // 获取应用图标
+        function getAppIcon(app) {
+            if (isValidImageUrl(app.appIcon)) {
+                return app.appIcon;
+            }
+            // 根据应用类型返回默认图标
+            return DEFAULT_ICONS[app.type] || DEFAULT_ICONS['DEFAULT'];
+        }
+
+        // 筛选功能
+        function filterByType(type) {
+            currentFilters.type = type;
+            currentPage = 0;
+            updateFilterButtons('typeFilters', type);
+            loadApps();
+        }
+        function filterByPlatform(platform) {
+            currentFilters.platform = platform;
+            currentPage = 0;
+            updateFilterButtons('platformFilters', platform);
+            loadApps();
+        }
+        function sortBy(sortBy, sortOrder) {
+            currentFilters.sortBy = sortBy;
+            currentFilters.sortOrder = sortOrder;
+            currentPage = 0;
+            loadApps();
+        }
+        function updateFilterButtons(containerId, activeValue) {
+            const container = document.getElementById(containerId);
+            const buttons = container.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase() === activeValue.toLowerCase() || 
+                    (activeValue === 'all' && btn.textContent === '全部')) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // 验证图片URL是否有效
+        function isValidImageUrl(url) {
+            if (!url) return false;
+            // 优先使用本地图片资源
+            if (url.startsWith('/images/') || url.startsWith('./images/')) {
+                return true;
+            }
+            // 检查是否是允许的图片源
+            const allowedDomains = [
+                'via.placeholder.com',
+                'cdn.jsdelivr.net',
+                'cdnjs.cloudflare.com'
+            ];
+            try {
+                const urlObj = new URL(url);
+                return allowedDomains.some(domain => urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain));
+            } catch (e) {
+                // 如果不是有效的URL，返回false
+                return false;
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadApps();
+        });
+
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                // 获取总应用数
+                const totalAppsResponse = await fetch('/api/apps/count');
+                const totalApps = await totalAppsResponse.json();
+                document.getElementById('totalApps').textContent = totalApps.toLocaleString();
+                
+                // 获取免费应用数
+                const freeAppsResponse = await fetch('/api/apps/count/free');
+                const freeApps = await freeAppsResponse.json();
+                document.getElementById('freeApps').textContent = freeApps.toLocaleString();
+                
+                // 获取推荐应用数
+                const featuredAppsResponse = await fetch('/api/apps/count/featured');
+                const featuredApps = await featuredAppsResponse.json();
+                document.getElementById('featuredApps').textContent = featuredApps.toLocaleString();
+                
+                // 获取总下载数
+                const totalDownloadsResponse = await fetch('/api/apps/count/downloads');
+                const totalDownloads = await totalDownloadsResponse.json();
+                document.getElementById('totalDownloads').textContent = totalDownloads.toLocaleString();
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+                // 设置默认值
+                document.getElementById('freeApps').textContent = '0';
+                document.getElementById('featuredApps').textContent = '0';
+                document.getElementById('totalDownloads').textContent = '0';
+            }
+        }
+
+        // 加载应用列表
+        async function loadApps() {
+            try {
+                showLoading();
+                
+                // 构建搜索请求对象
+                const searchRequest = {
+                    keyword: currentFilters.keyword || null,
+                    type: currentFilters.type && currentFilters.type !== 'all' ? currentFilters.type : null,
+                    platform: currentFilters.platform && currentFilters.platform !== 'all' ? currentFilters.platform : null,
+                    isFree: null,
+                    isFeatured: null,
+                    page: currentPage,
+                    size: currentSize,
+                    sortBy: currentFilters.sortBy,
+                    sortOrder: currentFilters.sortOrder
+                };
+
+                console.log('搜索请求:', searchRequest); // 调试日志
+
+                const response = await fetch('/api/apps/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(searchRequest)
+                });
+                const data = await response.json();
+                
+                console.log('搜索结果:', data); // 调试日志
+                
+                displayApps(data.content);
+                displayPagination(data);
+            } catch (error) {
+                console.error('加载应用失败:', error);
+                showError('加载应用失败，请稍后重试');
+            }
+        }
+
+        // 显示应用列表
+        function displayApps(apps) {
+            const container = document.getElementById('appsContainer');
+            
+            if (apps.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="no-results">
+                            <i class="fas fa-search fa-3x mb-3"></i>
+                            <h4>没有找到相关应用</h4>
+                            <p>请尝试调整搜索条件或筛选条件</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = apps.map(app => `
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="app-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="${getAppIcon(app)}" 
+                                     alt="${app.name}" class="app-icon me-3">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">${app.name}</h6>
+                                    <div class="app-rating mb-1">
+                                        ${generateStars(app.rating)}
+                                        <small class="text-muted">(${app.ratingCount?.toLocaleString() || 0})</small>
+                                    </div>
+                                    <div class="app-price ${app.price === 0 ? 'free' : 'paid'}">
+                                        ${app.price === 0 ? '免费' : `¥${app.price}`}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p class="text-muted small mb-3">${app.shortDescription || app.description?.substring(0, 100) + '...' || '暂无描述'}</p>
+                            
+                            <div class="mb-3">
+                                <span class="category-badge">${getTypeDisplayName(app.type)}</span>
+                                ${app.platforms?.map(p => `<span class="platform-badge">${p.displayName}</span>`).join('') || ''}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${app.downloadCount?.toLocaleString() || 0} 次下载</small>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary me-2" 
+                                            onclick="showAppDetail(${app.id})">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="btn btn-sm download-btn" 
+                                            onclick="downloadApp(${app.id}, 'ANDROID')">
+                                        <i class="fas fa-download me-1"></i>下载
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 显示分页
+        function displayPagination(pageData) {
+            const container = document.getElementById('paginationContainer');
+            
+            if (pageData.totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let paginationHtml = '<nav><ul class="pagination">';
+            
+            // 上一页
+            if (pageData.first) {
+                paginationHtml += '<li class="page-item disabled"><span class="page-link">上一页</span></li>';
+            } else {
+                paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${currentPage - 1})">上一页</a></li>`;
+            }
+            
+            // 页码
+            const startPage = Math.max(0, currentPage - 2);
+            const endPage = Math.min(pageData.totalPages - 1, currentPage + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    paginationHtml += `<li class="page-item active"><span class="page-link">${i + 1}</span></li>`;
+                } else {
+                    paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i + 1}</a></li>`;
+                }
+            }
+            
+            // 下一页
+            if (pageData.last) {
+                paginationHtml += '<li class="page-item disabled"><span class="page-link">下一页</span></li>';
+            } else {
+                paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${currentPage + 1})">下一页</a></li>`;
+            }
+            
+            paginationHtml += '</ul></nav>';
+            container.innerHTML = paginationHtml;
+        }
+
+        // 搜索功能
+        let searchTimeout;
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch();
+            }, 500);
+        }
+
+        function performSearch() {
+            currentFilters.keyword = document.getElementById('searchInput').value.trim();
+            currentPage = 0;
+            loadApps();
+        }
+
+        // 导航功能
+        function showFeatured() {
+            currentFilters = { keyword: '', type: null, platform: null, sortBy: 'createdAt', sortOrder: 'desc' };
+            currentPage = 0;
+            loadFeaturedApps();
+        }
+
+        function showLatest() {
+            currentFilters = { keyword: '', type: null, platform: null, sortBy: 'createdAt', sortOrder: 'desc' };
+            currentPage = 0;
+            loadLatestApps();
+        }
+
+        function showPopular() {
+            currentFilters = { keyword: '', type: null, platform: null, sortBy: 'downloadCount', sortOrder: 'desc' };
+            currentPage = 0;
+            loadPopularApps();
+        }
+
+        function showFree() {
+            currentFilters = { keyword: '', type: null, platform: null, sortBy: 'createdAt', sortOrder: 'desc' };
+            currentPage = 0;
+            loadFreeApps();
+        }
+
+        // 加载特定类型的应用
+        async function loadFeaturedApps() {
+            try {
+                showLoading();
+                const response = await fetch(`/api/apps/featured?page=${currentPage}&size=${currentSize}`);
+                const data = await response.json();
+                displayApps(data.content);
+                displayPagination(data);
+            } catch (error) {
+                console.error('加载推荐应用失败:', error);
+                showError('加载推荐应用失败');
+            }
+        }
+
+        async function loadLatestApps() {
+            try {
+                showLoading();
+                const response = await fetch(`/api/apps/latest?page=${currentPage}&size=${currentSize}`);
+                const data = await response.json();
+                displayApps(data.content);
+                displayPagination(data);
+            } catch (error) {
+                console.error('加载最新应用失败:', error);
+                showError('加载最新应用失败');
+            }
+        }
+
+        async function loadPopularApps() {
+            try {
+                showLoading();
+                const response = await fetch(`/api/apps/popular?page=${currentPage}&size=${currentSize}`);
+                const data = await response.json();
+                displayApps(data.content);
+                displayPagination(data);
+            } catch (error) {
+                console.error('加载热门应用失败:', error);
+                showError('加载热门应用失败');
+            }
+        }
+
+        async function loadFreeApps() {
+            try {
+                showLoading();
+                const response = await fetch(`/api/apps/free?page=${currentPage}&size=${currentSize}`);
+                const data = await response.json();
+                displayApps(data.content);
+                displayPagination(data);
+            } catch (error) {
+                console.error('加载免费应用失败:', error);
+                showError('加载免费应用失败');
+            }
+        }
+
+        // 分页功能
+        function goToPage(page) {
+            currentPage = page;
+            loadApps();
+        }
+
+        // 显示应用详情
+        async function showAppDetail(appId) {
+            try {
+                const response = await fetch(`/api/apps/${appId}`);
+                const app = await response.json();
+                
+                document.getElementById('modalAppTitle').textContent = app.name;
+                
+                const modalBody = document.getElementById('modalAppBody');
+                modalBody.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-4">
+                            <img src="${getAppIcon(app)}" 
+                                 alt="${app.name}" class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-8">
+                            <h5>${app.name}</h5>
+                            <p class="text-muted">${app.developer}</p>
+                            <div class="app-rating mb-2">
+                                ${generateStars(app.rating)}
+                                <span class="ms-2">${app.rating} (${app.ratingCount?.toLocaleString() || 0} 条评价)</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="category-badge">${getTypeDisplayName(app.type)}</span>
+                                ${app.platforms?.map(p => `<span class="platform-badge">${p.displayName}</span>`).join('') || ''}
+                            </div>
+                            <p>${app.description || '暂无详细描述'}</p>
+                            <div class="mb-3">
+                                <strong>版本:</strong> ${app.version || '未知'}<br>
+                                <strong>大小:</strong> ${app.fileSize || '未知'}<br>
+                                <strong>下载次数:</strong> ${app.downloadCount?.toLocaleString() || 0}
+                            </div>
+                            <div class="d-flex gap-2">
+                                ${app.downloads?.map(download => `
+                                    <button class="btn btn-success" onclick="downloadApp(${app.id}, '${download.platform}')">
+                                        <i class="fas fa-download me-1"></i>${download.platform.displayName}
+                                    </button>
+                                `).join('') || ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${app.screenshots && app.screenshots.length > 0 ? `
+                        <hr>
+                        <h6>应用截图</h6>
+                        <div class="app-screenshots">
+                            ${app.screenshots.map(screenshot => `
+                                <img src="${screenshot}" alt="截图" class="app-screenshot">
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${app.reviews && app.reviews.length > 0 ? `
+                        <hr>
+                        <h6>用户评价</h6>
+                        ${app.reviews.map(review => `
+                            <div class="review-item">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>${review.userName}</strong>
+                                        <div class="review-rating">${generateStars(review.rating)}</div>
+                                    </div>
+                                    <div class="review-date">${new Date(review.createdAt).toLocaleDateString()}</div>
+                                </div>
+                                <p class="mb-0">${review.comment || '用户未留下评论'}</p>
+                            </div>
+                        `).join('')}
+                    ` : ''}
+                `;
+                
+                new bootstrap.Modal(document.getElementById('appDetailModal')).show();
+            } catch (error) {
+                console.error('加载应用详情失败:', error);
+                alert('加载应用详情失败');
+            }
+        }
+
+        // 下载应用
+        async function downloadApp(appId, platform) {
+            try {
+                await fetch(`/api/apps/${appId}/download?platform=${platform}`, {
+                    method: 'POST'
+                });
+                
+                // 获取下载链接
+                const response = await fetch(`/api/apps/${appId}`);
+                const app = await response.json();
+                const download = app.downloads?.find(d => d.platform === platform);
+                
+                if (download) {
+                    window.open(download.downloadUrl, '_blank');
+                } else {
+                    alert('该平台暂不支持下载');
+                }
+            } catch (error) {
+                console.error('下载失败:', error);
+                alert('下载失败，请稍后重试');
+            }
+        }
+
+        // 辅助函数
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+            
+            return '★'.repeat(fullStars) + 
+                   (hasHalfStar ? '☆' : '') + 
+                   '☆'.repeat(emptyStars);
+        }
+
+        function getTypeDisplayName(type) {
+            const typeMap = {
+                'GAME': '游戏',
+                'TOOL': '工具',
+                'SOCIAL': '社交',
+                'PHOTOGRAPHY': '摄影',
+                'PRODUCTIVITY': '生产力',
+                'EDUCATION': '教育',
+                'ENTERTAINMENT': '娱乐',
+                'HEALTH': '健康',
+                'FINANCE': '金融',
+                'SHOPPING': '购物',
+                'TRAVEL': '旅行',
+                'NEWS': '新闻',
+                'SPORTS': '体育',
+                'MUSIC': '音乐',
+                'VIDEO': '视频',
+                'OTHER': '其他'
+            };
+            return typeMap[type] || type;
+        }
+
+        function showLoading() {
+            document.getElementById('appsContainer').innerHTML = `
+                <div class="col-12">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <p>正在加载应用...</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('appsContainer').innerHTML = `
+                <div class="col-12">
+                    <div class="no-results">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>
+                        <h4>加载失败</h4>
+                        <p>${message}</p>
+                        <button class="btn btn-primary" onclick="loadApps()">重试</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 统计卡片点击处理函数
+        async function showAllApps() {
+            try {
+                showLoading();
+                const response = await fetch(`/api/apps/all?page=${currentPage}&size=${currentSize}`);
+                const data = await response.json();
+                displayApps(data.content);
+                displayPagination(data);
+                
+                // 更新页面标题
+                document.querySelector('.hero-section h1').textContent = '所有应用';
+            } catch (error) {
+                console.error('加载所有应用失败:', error);
+                showError('加载所有应用失败');
+            }
+        }
+
+        async function showFreeApps() {
+            try {
+                showLoading();
+                const response = await fetch(`/api/apps/free?page=${currentPage}&size=${currentSize}`);
+                const data = await response.json();
+                displayApps(data.content);
+                displayPagination(data);
+                
+                // 更新页面标题
+                document.querySelector('.hero-section h1').textContent = '免费应用';
+            } catch (error) {
+                console.error('加载免费应用失败:', error);
+                showError('加载免费应用失败');
+            }
+        }
+
+        async function showTopDownloads() {
+            try {
+                showLoading();
+                const response = await fetch(`/api/apps/popular?page=0&size=10`);
+                const data = await response.json();
+                displayApps(data.content);
+                displayPagination(data);
+                
+                // 更新页面标题
+                document.querySelector('.hero-section h1').textContent = '下载量排行';
+            } catch (error) {
+                console.error('加载下载量排行失败:', error);
+                showError('加载下载量排行失败');
+            }
+        }
+
+        async function showDownloadChart() {
+            try {
+                const response = await fetch('/api/apps/top-downloads');
+                const apps = await response.json();
+                
+                // 显示模态框
+                const modal = new bootstrap.Modal(document.getElementById('downloadChartModal'));
+                modal.show();
+                
+                // 生成图表
+                generateDownloadChart(apps);
+                
+                // 生成排行榜
+                generateDownloadRanking(apps);
+            } catch (error) {
+                console.error('加载下载量图表失败:', error);
+                alert('加载下载量图表失败');
+            }
+        }
+
+        function generateDownloadChart(apps) {
+            const ctx = document.getElementById('downloadChart').getContext('2d');
+            
+            // 如果已有图表，先销毁
+            if (window.downloadChart) {
+                window.downloadChart.destroy();
+            }
+            
+            const labels = apps.map(app => app.name.length > 10 ? app.name.substring(0, 10) + '...' : app.name);
+            const data = apps.map(app => app.downloadCount || 0);
+            
+            window.downloadChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '下载量',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '下载次数'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '应用名称'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '应用下载量排行榜'
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateDownloadRanking(apps) {
+            const container = document.getElementById('downloadRanking');
+            container.innerHTML = apps.map((app, index) => `
+                <div class="ranking-item d-flex align-items-center mb-2 p-2 border rounded">
+                    <div class="ranking-number me-3 fw-bold ${index < 3 ? 'text-warning' : 'text-muted'}">
+                        ${index + 1}
+                    </div>
+                    <img src="${getAppIcon(app)}" alt="${app.name}" class="ranking-icon me-2" style="width: 30px; height: 30px; border-radius: 5px;">
+                    <div class="flex-grow-1">
+                        <div class="ranking-name small fw-bold">${app.name}</div>
+                        <div class="ranking-downloads small text-muted">${(app.downloadCount || 0).toLocaleString()} 次下载</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+    
+    <!-- Chart.js 图表库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html> 
+</html> 

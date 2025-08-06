@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录API编码测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 3px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 3px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>登录API编码测试</h1>
+    
+    <div class="test-section">
+        <h3>1. 测试登录API (POST /api/login)</h3>
+        <div>
+            <input type="text" id="userId" placeholder="用户ID" value="test@example.com">
+            <input type="password" id="password" placeholder="密码" value="wrongpassword">
+            <button onclick="testLoginAPI()">测试登录API</button>
+        </div>
+        <div id="loginResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. 测试注册API (POST /api/register)</h3>
+        <div>
+            <input type="text" id="regUserId" placeholder="用户ID" value="test@example.com">
+            <input type="password" id="regPassword" placeholder="密码" value="password123">
+            <button onclick="testRegisterAPI()">测试注册API</button>
+        </div>
+        <div id="registerResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. 测试响应头</h3>
+        <button onclick="testHeaders()">测试响应头</button>
+        <div id="headersResult" class="result"></div>
+    </div>
+
+    <script>
+        async function testLoginAPI() {
+            const resultDiv = document.getElementById('loginResult');
+            const userId = document.getElementById('userId').value;
+            const password = document.getElementById('password').value;
+            
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Accept': 'application/json; charset=UTF-8'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        password: password
+                    })
+                });
+                
+                const contentType = response.headers.get('content-type');
+                const data = await response.text();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ 登录成功</h4>
+                            <p><strong>Content-Type:</strong> ${contentType}</p>
+                            <p><strong>响应数据:</strong></p>
+                            <pre>${data}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ 登录失败 (预期)</h4>
+                            <p><strong>状态码:</strong> ${response.status}</p>
+                            <p><strong>Content-Type:</strong> ${contentType}</p>
+                            <p><strong>错误消息:</strong></p>
+                            <pre>${data}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ 请求失败</h4>
+                        <p>错误: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testRegisterAPI() {
+            const resultDiv = document.getElementById('registerResult');
+            const userId = document.getElementById('regUserId').value;
+            const password = document.getElementById('regPassword').value;
+            
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8',
+                        'Accept': 'application/json; charset=UTF-8'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        password: password,
+                        name: '测试用户'
+                    })
+                });
+                
+                const contentType = response.headers.get('content-type');
+                const data = await response.text();
+                
+                resultDiv.innerHTML = `
+                    <div class="${response.ok ? 'success' : 'error'}">
+                        <h4>${response.ok ? '✅ 注册成功' : '❌ 注册失败'}</h4>
+                        <p><strong>状态码:</strong> ${response.status}</p>
+                        <p><strong>Content-Type:</strong> ${contentType}</p>
+                        <p><strong>响应数据:</strong></p>
+                        <pre>${data}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ 请求失败</h4>
+                        <p>错误: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testHeaders() {
+            const resultDiv = document.getElementById('headersResult');
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8'
+                    },
+                    body: JSON.stringify({
+                        userId: 'test@example.com',
+                        password: 'wrongpassword'
+                    })
+                });
+                
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                    headers[key] = value;
+                });
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ 响应头测试成功</h4>
+                        <p><strong>所有响应头:</strong></p>
+                        <pre>${JSON.stringify(headers, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ 响应头测试失败</h4>
+                        <p>错误: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 

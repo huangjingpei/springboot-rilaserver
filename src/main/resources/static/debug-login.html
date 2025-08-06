@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录问题调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>登录问题调试工具</h1>
+    
+    <div class="debug-section">
+        <h3>1. 基础连接测试</h3>
+        <button onclick="testBasicConnection()">测试基础连接</button>
+        <button onclick="testServerInfo()">获取服务器信息</button>
+        <div id="basicResult"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>2. 登录页面访问测试</h3>
+        <button onclick="testFormLoginAccess()">测试 /form-login 访问</button>
+        <button onclick="testLoginPageAccess()">测试 /login 访问</button>
+        <button onclick="testRegisterPageAccess()">测试注册页面访问</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>3. 安全配置测试</h3>
+        <button onclick="testSecurityEndpoints()">测试安全相关端点</button>
+        <button onclick="testApiEndpoints()">测试API端点</button>
+        <div id="securityResult"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>4. 浏览器信息</h3>
+        <button onclick="showBrowserInfo()">显示浏览器信息</button>
+        <div id="browserResult"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>5. 网络请求详情</h3>
+        <button onclick="testDetailedRequest()">详细请求测试</button>
+        <div id="networkResult"></div>
+    </div>
+    
+    <script>
+        function showResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+        
+        async function testBasicConnection() {
+            try {
+                const response = await fetch('/', { method: 'GET' });
+                showResult('basicResult', `✅ 基础连接成功！状态码: ${response.status}`, 'success');
+            } catch (error) {
+                showResult('basicResult', `❌ 基础连接失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testServerInfo() {
+            try {
+                const response = await fetch('/api/admin/users', { method: 'GET' });
+                showResult('basicResult', `✅ 服务器API响应正常！状态码: ${response.status}`, 'success');
+            } catch (error) {
+                showResult('basicResult', `❌ 服务器API测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testFormLoginAccess() {
+            try {
+                console.log('开始测试 /form-login 访问...');
+                const startTime = Date.now();
+                
+                const response = await fetch('/form-login', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                console.log('响应详情:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    duration: duration + 'ms'
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    showResult('loginResult', 
+                        `✅ /form-login 访问成功！<br>
+                        状态码: ${response.status}<br>
+                        响应时间: ${duration}ms<br>
+                        内容长度: ${text.length} 字符<br>
+                        内容类型: ${response.headers.get('content-type')}`, 'success');
+                } else {
+                    showResult('loginResult', 
+                        `❌ /form-login 访问失败！<br>
+                        状态码: ${response.status}<br>
+                        状态文本: ${response.statusText}<br>
+                        响应时间: ${duration}ms`, 'error');
+                }
+            } catch (error) {
+                console.error('请求失败:', error);
+                showResult('loginResult', `❌ 请求失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testLoginPageAccess() {
+            try {
+                const response = await fetch('/login', { method: 'GET' });
+                if (response.ok) {
+                    showResult('loginResult', `✅ /login 访问成功！状态码: ${response.status}`, 'success');
+                } else {
+                    showResult('loginResult', `❌ /login 访问失败！状态码: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('loginResult', `❌ 请求失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testRegisterPageAccess() {
+            try {
+                const response = await fetch('/register-user.html', { method: 'GET' });
+                if (response.ok) {
+                    showResult('loginResult', `✅ 注册页面访问成功！状态码: ${response.status}`, 'success');
+                } else {
+                    showResult('loginResult', `❌ 注册页面访问失败！状态码: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('loginResult', `❌ 请求失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSecurityEndpoints() {
+            const endpoints = [
+                '/api/register',
+                '/api/login', 
+                '/api/user/status',
+                '/api/admin/users'
+            ];
+            
+            let results = '';
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, { method: 'GET' });
+                    results += `${endpoint}: ${response.status} ${response.statusText}<br>`;
+                } catch (error) {
+                    results += `${endpoint}: 错误 - ${error.message}<br>`;
+                }
+            }
+            
+            showResult('securityResult', `安全端点测试结果:<br>${results}`, 'info');
+        }
+        
+        async function testApiEndpoints() {
+            const endpoints = [
+                '/api/apps',
+                '/api/stream-limits',
+                '/v3/api-docs'
+            ];
+            
+            let results = '';
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, { method: 'GET' });
+                    results += `${endpoint}: ${response.status} ${response.statusText}<br>`;
+                } catch (error) {
+                    results += `${endpoint}: 错误 - ${error.message}<br>`;
+                }
+            }
+            
+            showResult('securityResult', `API端点测试结果:<br>${results}`, 'info');
+        }
+        
+        function showBrowserInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                url: window.location.href,
+                protocol: window.location.protocol,
+                host: window.location.host,
+                pathname: window.location.pathname
+            };
+            
+            showResult('browserResult', 
+                `<strong>浏览器信息:</strong><br>
+                <pre>${JSON.stringify(info, null, 2)}</pre>`, 'info');
+        }
+        
+        async function testDetailedRequest() {
+            try {
+                const response = await fetch('/form-login', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                    headers[key] = value;
+                });
+                
+                const details = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: headers,
+                    url: response.url,
+                    type: response.type,
+                    redirected: response.redirected
+                };
+                
+                showResult('networkResult', 
+                    `<strong>详细请求信息:</strong><br>
+                    <pre>${JSON.stringify(details, null, 2)}</pre>`, 'info');
+                    
+            } catch (error) {
+                showResult('networkResult', `❌ 详细请求失败: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html> 

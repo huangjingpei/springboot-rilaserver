@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/qwebchannel.js</file>
+        <file>resources/login-api.html</file>
+        <file>resources/login-api-qt.html</file>
+        <file>resources/register-api.html</file>
+        <file>resources/register-api-qt.html</file>
+    </qresource>
+</RCC> 

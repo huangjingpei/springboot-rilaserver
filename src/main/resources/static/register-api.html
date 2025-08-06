@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册 - API版本</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 30px;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        .loading {
+            display: none;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="form-container">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2><i class="fas fa-user-plus me-2"></i>普通用户注册</h2>
+                    <p class="mb-0">创建您的个人账户</p>
+                </div>
+                <div class="card-body p-4">
+                    <!-- 成功消息 -->
+                    <div id="successAlert" class="alert alert-success" style="display: none;">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span id="successMessage"></span>
+                    </div>
+                    
+                    <!-- 错误消息 -->
+                    <div id="errorAlert" class="alert alert-danger" style="display: none;">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <span id="errorMessage"></span>
+                    </div>
+
+                    <!-- 说明信息 -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>普通用户注册</strong>：此页面仅用于创建普通个人账户，默认设备数为1个。
+                        如需创建授权用户或企业用户，请联系管理员。
+                    </div>
+
+                    <form id="registerForm">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="userId" class="form-label">
+                                    <i class="fas fa-envelope me-2"></i>用户ID（邮箱）
+                                </label>
+                                <input type="email" class="form-control" id="userId" name="userId" 
+                                       placeholder="请输入邮箱地址" required>
+                                <div class="invalid-feedback" id="userIdError"></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="name" class="form-label">
+                                    <i class="fas fa-user me-2"></i>用户姓名
+                                </label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       placeholder="请输入用户姓名（可选）">
+                                <div class="invalid-feedback" id="nameError"></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="phone" class="form-label">
+                                    <i class="fas fa-phone me-2"></i>手机号码
+                                </label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       placeholder="请输入手机号码（可选）" pattern="^1[3-9]\d{9}$">
+                                <div class="invalid-feedback" id="phoneError"></div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>密码
+                                </label>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       placeholder="请输入密码（至少6位）" required minlength="6">
+                                <div class="invalid-feedback" id="passwordError"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <span class="loading">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    注册中...
+                                </span>
+                                <span class="normal">
+                                    <i class="fas fa-user-plus me-2"></i>立即注册
+                                </span>
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <span class="text-muted">已有账号？</span>
+                            <a href="/login-api.html" class="text-decoration-none">
+                                <i class="fas fa-sign-in-alt me-1"></i>点击登录
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // 重置表单验证状态
+            resetValidation();
+            
+            // 显示加载状态
+            setLoading(true);
+            
+            // 收集表单数据
+            const formData = {
+                userId: document.getElementById('userId').value,
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                password: document.getElementById('password').value
+            };
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    showSuccess(result.message || '注册成功！');
+                    document.getElementById('registerForm').reset();
+                } else {
+                    showError(result.message || '注册失败，请重试');
+                }
+            } catch (error) {
+                console.error('注册错误:', error);
+                showError('网络错误，请检查网络连接');
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        function setLoading(loading) {
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingSpan = submitBtn.querySelector('.loading');
+            const normalSpan = submitBtn.querySelector('.normal');
+            
+            if (loading) {
+                loadingSpan.style.display = 'inline';
+                normalSpan.style.display = 'none';
+                submitBtn.disabled = true;
+            } else {
+                loadingSpan.style.display = 'none';
+                normalSpan.style.display = 'inline';
+                submitBtn.disabled = false;
+            }
+        }
+        
+        function showSuccess(message) {
+            hideAlerts();
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successAlert').style.display = 'block';
+        }
+        
+        function showError(message) {
+            hideAlerts();
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorAlert').style.display = 'block';
+        }
+        
+        function hideAlerts() {
+            document.getElementById('successAlert').style.display = 'none';
+            document.getElementById('errorAlert').style.display = 'none';
+        }
+        
+        function resetValidation() {
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+        }
+        
+        // 实时验证
+        document.getElementById('userId').addEventListener('blur', function() {
+            const email = this.value;
+            if (email && !isValidEmail(email)) {
+                this.classList.add('is-invalid');
+                document.getElementById('userIdError').textContent = '请输入有效的邮箱地址';
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        document.getElementById('phone').addEventListener('blur', function() {
+            const phone = this.value;
+            if (phone && !isValidPhone(phone)) {
+                this.classList.add('is-invalid');
+                document.getElementById('phoneError').textContent = '请输入有效的手机号码';
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        document.getElementById('password').addEventListener('blur', function() {
+            const password = this.value;
+            if (password && password.length < 6) {
+                this.classList.add('is-invalid');
+                document.getElementById('passwordError').textContent = '密码长度不能少于6位';
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        function isValidEmail(email) {
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return emailRegex.test(email);
+        }
+        
+        function isValidPhone(phone) {
+            const phoneRegex = /^1[3-9]\d{9}$/;
+            return phoneRegex.test(phone);
+        }
+    </script>
+</body>
+</html> 

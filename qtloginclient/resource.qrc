@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <!-- HTML 页面 -->
+        <file>resources/login-api.html</file>
+        <file>resources/login-api-qt.html</file>
+        <file>resources/register-api-qt.html</file>
+        <file>resources/user-auth-qt.html</file>
+        
+        <!-- JavaScript 库 -->
+        <file>resources/qwebchannel.js</file>
+        <file>resources/js/bootstrap.bundle.min.js</file>
+        
+        <!-- CSS 样式 -->
+        <file>resources/css/bootstrap.min.css</file>
+        <file>resources/css/local-fonts.css</file>
+        <file>resources/css/local-icons.css</file>
+        
+        <!-- 图片资源 -->
+        <file>resources/rila-left-logo.png</file>
+    </qresource>
+</RCC>
