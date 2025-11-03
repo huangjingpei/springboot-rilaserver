@@ -1,139 +1,147 @@
 package net.enjoy.springboot.registrationlogin.entity;
 
 import jakarta.persistence.*;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import java.time.Instant;
 
 @Entity
 @Table(name = "apps")
 public class App {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false, unique = true)
-    private String name;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "short_description")
-    private String shortDescription;
-
-    @Column(name = "app_icon")
-    private String appIcon;
-
-    @ElementCollection
-    @CollectionTable(name = "app_screenshots", joinColumns = @JoinColumn(name = "app_id"))
-    @Column(name = "screenshot_url")
-    private List<String> screenshots;
-
-    @Column(precision = 3, scale = 2)
-    private BigDecimal rating = BigDecimal.ZERO;
-
-    @Column(name = "rating_count")
-    private Integer ratingCount = 0;
-
-    @Column(precision = 10, scale = 2)
-    private BigDecimal price = BigDecimal.ZERO;
-
-    @Column(name = "original_price")
-    private BigDecimal originalPrice;
-
-    @Enumerated(EnumType.STRING)
-    private AppType type;
-
-    @ElementCollection
-    @Enumerated(EnumType.STRING)
-    @CollectionTable(name = "app_platforms", joinColumns = @JoinColumn(name = "app_id"))
-    @Column(name = "platform")
-    private List<Platform> platforms;
-
-    @Column(name = "download_count")
-    private Long downloadCount = 0L;
-
-    @Column(name = "file_size")
-    private String fileSize;
-
-    @Column(name = "version")
-    private String version;
-
-    @Column(name = "developer")
-    private String developer;
-
-    @Column(name = "release_date")
-    private LocalDateTime releaseDate;
-
-    @Column(name = "last_updated")
-    private LocalDateTime lastUpdated;
-
-    @Column(name = "is_featured")
-    private Boolean isFeatured = false;
-
-    @Column(name = "is_active")
-    private Boolean isActive = true;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
+    
     // 应用类型枚举
     public enum AppType {
         GAME("游戏"),
         TOOL("工具"),
         SOCIAL("社交"),
-        PHOTOGRAPHY("摄影"),
-        PRODUCTIVITY("生产力"),
         EDUCATION("教育"),
         ENTERTAINMENT("娱乐"),
-        HEALTH("健康"),
-        FINANCE("金融"),
-        SHOPPING("购物"),
-        TRAVEL("旅行"),
-        NEWS("新闻"),
-        SPORTS("体育"),
-        MUSIC("音乐"),
-        VIDEO("视频"),
+        PRODUCTIVITY("生产力"),
+        UTILITY("实用工具"),
         OTHER("其他");
-
+        
         private final String displayName;
-
+        
         AppType(String displayName) {
             this.displayName = displayName;
         }
-
+        
         public String getDisplayName() {
             return displayName;
         }
     }
-
+    
     // 平台枚举
     public enum Platform {
+        WINDOWS("Windows"),
+        MAC("macOS"),
+        LINUX("Linux"),
         ANDROID("Android"),
         IOS("iOS"),
-        WINDOWS("Windows"),
-        MAC("Mac"),
-        LINUX("Linux"),
-        WEB("Web");
-
+        WEB("Web"),
+        CROSS_PLATFORM("跨平台");
+        
         private final String displayName;
-
+        
         Platform(String displayName) {
             this.displayName = displayName;
         }
-
+        
         public String getDisplayName() {
             return displayName;
         }
     }
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    // 构造函数
-    public App() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    @NotBlank(message = "应用标识符不能为空")
+    @Size(max = 100, message = "应用标识符长度不能超过100个字符")
+    @Column(unique = true)
+    private String appId; // 应用唯一标识符
+
+    @NotBlank(message = "应用名称不能为空")
+    @Size(max = 200, message = "应用名称长度不能超过200个字符")
+    private String name; // 应用显示名称
+
+    @Size(max = 500, message = "应用描述长度不能超过500个字符")
+    private String description; // 应用描述
+
+    @Size(max = 100, message = "应用版本长度不能超过100个字符")
+    private String currentVersion; // 当前版本
+
+    @Size(max = 100, message = "最低版本长度不能超过100个字符")
+    private String minVersion; // 最低支持版本
+
+    @Size(max = 100, message = "推荐版本长度不能超过100个字符")
+    private String recommendedVersion; // 推荐版本
+
+    @Size(max = 200, message = "应用图标URL长度不能超过200个字符")
+    private String iconUrl; // 应用图标URL
+
+    @Size(max = 200, message = "应用官网URL长度不能超过200个字符")
+    private String websiteUrl; // 应用官网URL
+
+    @Size(max = 100, message = "开发者名称长度不能超过100个字符")
+    private String developer; // 开发者名称
+
+    @Size(max = 200, message = "开发者邮箱长度不能超过200个字符")
+    private String developerEmail; // 开发者邮箱
+
+    @Size(max = 200, message = "许可证信息长度不能超过200个字符")
+    private String license; // 许可证信息
+
+    @Column(columnDefinition = "TEXT")
+    private String features; // 应用特性（JSON格式）
+
+    @Column(columnDefinition = "TEXT")
+    private String changelog; // 更新日志
+
+    @NotNull(message = "是否激活不能为空")
+    private Boolean isActive = true; // 是否激活
+
+    @NotNull(message = "是否公开不能为空")
+    private Boolean isPublic = true; // 是否公开
+
+    @NotNull(message = "是否强制更新不能为空")
+    private Boolean isMandatoryUpdate = false; // 是否强制更新
+
+    @Size(max = 50, message = "应用分类长度不能超过50个字符")
+    private String category; // 应用分类
+
+    @Size(max = 50, message = "应用标签长度不能超过50个字符")
+    private String tags; // 应用标签（逗号分隔）
+
+    @Enumerated(EnumType.STRING)
+    private AppType appType; // 应用类型
+
+    @Enumerated(EnumType.STRING)
+    private Platform platform; // 支持平台
+
+    private Boolean isFree = true; // 是否免费
+    private Boolean isFeatured = false; // 是否推荐
+    private Long downloadCount = 0L; // 下载次数
+    private Double rating = 0.0; // 评分
+    private Long ratingCount = 0L; // 评分次数
+
+    private Instant createdAt;
+    private Instant updatedAt;
+    private Instant lastUpdateDate; // 最后更新时间
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+        if (lastUpdateDate == null) {
+            lastUpdateDate = Instant.now();
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = Instant.now();
     }
 
     // Getters and Setters
@@ -143,6 +151,14 @@ public class App {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
     }
 
     public String getName() {
@@ -161,100 +177,44 @@ public class App {
         this.description = description;
     }
 
-    public String getShortDescription() {
-        return shortDescription;
+    public String getCurrentVersion() {
+        return currentVersion;
     }
 
-    public void setShortDescription(String shortDescription) {
-        this.shortDescription = shortDescription;
+    public void setCurrentVersion(String currentVersion) {
+        this.currentVersion = currentVersion;
     }
 
-    public String getAppIcon() {
-        return appIcon;
+    public String getMinVersion() {
+        return minVersion;
     }
 
-    public void setAppIcon(String appIcon) {
-        this.appIcon = appIcon;
+    public void setMinVersion(String minVersion) {
+        this.minVersion = minVersion;
     }
 
-    public List<String> getScreenshots() {
-        return screenshots;
+    public String getRecommendedVersion() {
+        return recommendedVersion;
     }
 
-    public void setScreenshots(List<String> screenshots) {
-        this.screenshots = screenshots;
+    public void setRecommendedVersion(String recommendedVersion) {
+        this.recommendedVersion = recommendedVersion;
     }
 
-    public BigDecimal getRating() {
-        return rating;
+    public String getIconUrl() {
+        return iconUrl;
     }
 
-    public void setRating(BigDecimal rating) {
-        this.rating = rating;
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
     }
 
-    public Integer getRatingCount() {
-        return ratingCount;
+    public String getWebsiteUrl() {
+        return websiteUrl;
     }
 
-    public void setRatingCount(Integer ratingCount) {
-        this.ratingCount = ratingCount;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public BigDecimal getOriginalPrice() {
-        return originalPrice;
-    }
-
-    public void setOriginalPrice(BigDecimal originalPrice) {
-        this.originalPrice = originalPrice;
-    }
-
-    public AppType getType() {
-        return type;
-    }
-
-    public void setType(AppType type) {
-        this.type = type;
-    }
-
-    public List<Platform> getPlatforms() {
-        return platforms;
-    }
-
-    public void setPlatforms(List<Platform> platforms) {
-        this.platforms = platforms;
-    }
-
-    public Long getDownloadCount() {
-        return downloadCount;
-    }
-
-    public void setDownloadCount(Long downloadCount) {
-        this.downloadCount = downloadCount;
-    }
-
-    public String getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(String fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
+    public void setWebsiteUrl(String websiteUrl) {
+        this.websiteUrl = websiteUrl;
     }
 
     public String getDeveloper() {
@@ -265,20 +225,100 @@ public class App {
         this.developer = developer;
     }
 
-    public LocalDateTime getReleaseDate() {
-        return releaseDate;
+    public String getDeveloperEmail() {
+        return developerEmail;
     }
 
-    public void setReleaseDate(LocalDateTime releaseDate) {
-        this.releaseDate = releaseDate;
+    public void setDeveloperEmail(String developerEmail) {
+        this.developerEmail = developerEmail;
     }
 
-    public LocalDateTime getLastUpdated() {
-        return lastUpdated;
+    public String getLicense() {
+        return license;
     }
 
-    public void setLastUpdated(LocalDateTime lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    public void setLicense(String license) {
+        this.license = license;
+    }
+
+    public String getFeatures() {
+        return features;
+    }
+
+    public void setFeatures(String features) {
+        this.features = features;
+    }
+
+    public String getChangelog() {
+        return changelog;
+    }
+
+    public void setChangelog(String changelog) {
+        this.changelog = changelog;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean active) {
+        isActive = active;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public Boolean getIsMandatoryUpdate() {
+        return isMandatoryUpdate;
+    }
+
+    public void setIsMandatoryUpdate(Boolean mandatoryUpdate) {
+        isMandatoryUpdate = mandatoryUpdate;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public AppType getAppType() {
+        return appType;
+    }
+
+    public void setAppType(AppType appType) {
+        this.appType = appType;
+    }
+
+    public Platform getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(Platform platform) {
+        this.platform = platform;
+    }
+
+    public Boolean getIsFree() {
+        return isFree;
+    }
+
+    public void setIsFree(Boolean isFree) {
+        this.isFree = isFree;
     }
 
     public Boolean getIsFeatured() {
@@ -289,32 +329,51 @@ public class App {
         this.isFeatured = isFeatured;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
+    public Long getDownloadCount() {
+        return downloadCount;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setDownloadCount(Long downloadCount) {
+        this.downloadCount = downloadCount;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
+
+    public Long getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(Long ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    public Instant getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    public void setLastUpdateDate(Instant lastUpdateDate) {
+        this.lastUpdateDate = lastUpdateDate;
     }
 } 

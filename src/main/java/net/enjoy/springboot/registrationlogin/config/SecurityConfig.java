@@ -172,4 +172,4 @@ public class SecurityConfig {
     public void setEnableFrameOptions(boolean enableFrameOptions) {
         this.enableFrameOptions = enableFrameOptions;
     }
-} 
+}

@@ -19,6 +19,10 @@ public class UpdatePackage {
     @Column(unique = true)
     private String version;
 
+    @NotBlank(message = "应用标识符不能为空")
+    @Size(max = 100, message = "应用标识符长度不能超过100个字符")
+    private String appId; // 关联的应用标识符
+
     @NotBlank(message = "平台信息不能为空")
     @Size(max = 50, message = "平台信息长度不能超过50个字符")
     private String platform;
@@ -91,6 +95,14 @@ public class UpdatePackage {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
     }
 
     public String getPlatform() {

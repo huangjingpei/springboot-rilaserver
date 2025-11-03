@@ -24,6 +24,12 @@ public class UpdateCheckResponse {
         this.hasUpdate = hasUpdate;
     }
 
+    // 错误响应时的构造函数
+    public UpdateCheckResponse(boolean hasUpdate, String errorMessage) {
+        this.hasUpdate = hasUpdate;
+        this.latestVersion = errorMessage;
+    }
+
     // 有更新时的构造函数
     public UpdateCheckResponse(boolean hasUpdate, String latestVersion, String releaseNotes, 
                              boolean isMandatory, Instant releaseDate, String downloadUrl, 

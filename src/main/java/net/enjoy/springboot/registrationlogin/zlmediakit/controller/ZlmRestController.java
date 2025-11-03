@@ -164,10 +164,24 @@ public class ZlmRestController {
             var streamLimitResult = streamLimitService.checkStreamLimit(user.getUserId());
             if (!streamLimitResult.isAllowed()) {
                 log.warn("推流数量限制检查失败: userId={}, reason={}", user.getUserId(), streamLimitResult.getMessage());
-                Map<String, Object> errorResponse = createErrorResponse(streamLimitResult.getMessage(), streamLimitResult.getCode());
-                errorResponse.put("currentStreams", streamLimitResult.getCurrentStreams());
-                errorResponse.put("maxStreams", streamLimitResult.getMaxStreams());
-                return ResponseEntity.badRequest().body(errorResponse);
+                
+                // 尝试删除用户最早的流
+                boolean deleted = deleteOldestStreamForUser(user.getUserId());
+                if (deleted) {
+                    log.info("已删除用户最早的流，重新检查推流限制: userId={}", user.getUserId());
+                    streamLimitResult = streamLimitService.checkStreamLimit(user.getUserId());
+                    if (!streamLimitResult.isAllowed()) {
+                        Map<String, Object> errorResponse = createErrorResponse(streamLimitResult.getMessage(), streamLimitResult.getCode());
+                        errorResponse.put("currentStreams", streamLimitResult.getCurrentStreams());
+                        errorResponse.put("maxStreams", streamLimitResult.getMaxStreams());
+                        return ResponseEntity.badRequest().body(errorResponse);
+                    }
+                } else {
+                    Map<String, Object> errorResponse = createErrorResponse(streamLimitResult.getMessage(), streamLimitResult.getCode());
+                    errorResponse.put("currentStreams", streamLimitResult.getCurrentStreams());
+                    errorResponse.put("maxStreams", streamLimitResult.getMaxStreams());
+                    return ResponseEntity.badRequest().body(errorResponse);
+                }
             }
             
             log.info("推流数量限制检查通过: userId={}, 当前推流数={}/{}", 
@@ -240,5 +254,159 @@ public class ZlmRestController {
         
         Map<String, Object> successResponse = createSuccessResponse(responseData);
         return ResponseEntity.ok(successResponse);
+    }
+    
+    /**
+     * 测试流ID解析功能
+     */
+    @GetMapping("/testStreamIdParse")
+    public ResponseEntity<Map<String, Object>> testStreamIdParse() {
+        Map<String, Object> responseData = new HashMap<>();
+        
+        // 测试流ID解析
+        String testStreamId = "stream_huangjingpei@gmail.com_1754469215270";
+        String parsedUserId = parseUserIdFromStreamId(testStreamId);
+        
+        responseData.put("testStreamId", testStreamId);
+        responseData.put("parsedUserId", parsedUserId);
+        responseData.put("parseSuccess", parsedUserId != null);
+        
+        if (parsedUserId != null) {
+            // 查找该用户的所有流
+            List<StreamInfo> userStreams = streamInfoRepository.findByUserId(parsedUserId);
+            responseData.put("userStreamsCount", userStreams.size());
+            
+            // 找到最早的流
+            StreamInfo oldestStream = userStreams.stream()
+                .sorted((s1, s2) -> s1.getCreatedAt().compareTo(s2.getCreatedAt()))
+                .findFirst()
+                .orElse(null);
+            
+            if (oldestStream != null) {
+                responseData.put("oldestStreamId", oldestStream.getStreamId());
+                responseData.put("oldestStreamCreatedAt", oldestStream.getCreatedAt());
+            }
+        }
+        
+        Map<String, Object> successResponse = createSuccessResponse(responseData);
+        return ResponseEntity.ok(successResponse);
+    }
+    
+    /**
+     * 删除用户最早的流
+     * @param userId 用户ID
+     * @return 是否成功删除
+     */
+    private boolean deleteOldestStreamForUser(String userId) {
+        try {
+            log.info("尝试删除用户最早的流: userId={}", userId);
+            
+            // 查找用户的所有活跃流（PUSHING状态）
+            List<StreamInfo> userActiveStreams = streamInfoRepository.findActiveStreamsByUserId(userId);
+            if (userActiveStreams.isEmpty()) {
+                log.warn("用户没有找到任何活跃流: userId={}", userId);
+                return false;
+            }
+            
+            // 按创建时间排序，找到最早的活跃流
+            StreamInfo oldestStream = userActiveStreams.stream()
+                .sorted((s1, s2) -> s1.getCreatedAt().compareTo(s2.getCreatedAt()))
+                .findFirst()
+                .orElse(null);
+            
+            if (oldestStream == null) {
+                log.warn("无法找到用户最早的活跃流: userId={}", userId);
+                return false;
+            }
+            
+            log.info("找到用户最早的活跃流: streamId={}, createdAt={}, status={}", 
+                    oldestStream.getStreamId(), oldestStream.getCreatedAt(), oldestStream.getStatus());
+            
+            // 更新流状态为STOPPED而不是直接删除
+            oldestStream.setStatus(StreamInfo.StreamStatus.STOPPED);
+            oldestStream.setEndTime(LocalDateTime.now());
+            if (oldestStream.getStartTime() != null) {
+                long duration = java.time.Duration.between(oldestStream.getStartTime(), oldestStream.getEndTime()).getSeconds();
+                oldestStream.setDuration(duration);
+            }
+            streamInfoRepository.save(oldestStream);
+            
+            log.info("成功停止用户最早的流: streamId={}, userId={}, duration={}秒", 
+                    oldestStream.getStreamId(), userId, oldestStream.getDuration());
+            
+            return true;
+            
+        } catch (Exception e) {
+            log.error("删除用户最早的流失败: userId={}, error={}", userId, e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    /**
+     * 根据流ID解析用户ID并删除最早的流
+     * @param streamId 流ID (格式: stream_用户名_时间戳)
+     * @return 是否成功删除
+     */
+    private boolean deleteOldestStreamByStreamId(String streamId) {
+        try {
+            log.info("根据流ID删除最早的流: streamId={}", streamId);
+            
+            // 解析流ID获取用户ID
+            String userId = parseUserIdFromStreamId(streamId);
+            if (userId == null) {
+                log.warn("无法从流ID解析用户ID: streamId={}", streamId);
+                return false;
+            }
+            
+            log.info("从流ID解析出用户ID: userId={}", userId);
+            
+            // 调用删除用户最早流的方法
+            return deleteOldestStreamForUser(userId);
+            
+        } catch (Exception e) {
+            log.error("根据流ID删除最早流失败: streamId={}, error={}", streamId, e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    /**
+     * 从流ID中解析用户ID
+     * @param streamId 流ID (格式: stream_用户名_时间戳)
+     * @return 用户ID，如果解析失败返回null
+     */
+    private String parseUserIdFromStreamId(String streamId) {
+        try {
+            if (streamId == null || !streamId.startsWith("stream_")) {
+                return null;
+            }
+            
+            // 移除 "stream_" 前缀
+            String remaining = streamId.substring(7);
+            
+            // 找到最后一个下划线的位置（时间戳分隔符）
+            int lastUnderscoreIndex = remaining.lastIndexOf('_');
+            if (lastUnderscoreIndex == -1) {
+                return null;
+            }
+            
+            // 提取用户ID部分
+            String userId = remaining.substring(0, lastUnderscoreIndex);
+            
+            // 验证时间戳部分是否为数字
+            String timestampStr = remaining.substring(lastUnderscoreIndex + 1);
+            try {
+                Long.parseLong(timestampStr);
+            } catch (NumberFormatException e) {
+                log.warn("流ID中的时间戳格式无效: timestamp={}", timestampStr);
+                return null;
+            }
+            
+            log.info("成功解析流ID: streamId={}, userId={}, timestamp={}", streamId, userId, timestampStr);
+            return userId;
+            
+        } catch (Exception e) {
+            log.error("解析流ID失败: streamId={}, error={}", streamId, e.getMessage());
+            return null;
+        }
     }
 }

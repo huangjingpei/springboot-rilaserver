@@ -16,6 +16,7 @@ import org.springframework.web.socket.WebSocketSession;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -228,13 +229,20 @@ public class StreamEventServiceImpl implements StreamEventService {
             
             int notifiedCount = 0;
             
+            // 首先尝试向特定房间的观众发送通知
             if (roomId != null) {
+                log.info("尝试向房间{}发送推流开始通知: streamId={}, streamerUserId={}", roomId, streamId, streamerUserId);
+                
                 // 获取房间内所有观众（除了主播）
                 List<RoomService.Client> roomClients = roomService.getRoomClients(roomId);
+                log.info("房间{}中有{}个客户端连接", roomId, roomClients.size());
                 
                 for (RoomService.Client client : roomClients) {
-                    // 跳过主播自己
-                    if (client.getUserId().equals(streamerUserId)) {
+                    log.info("检查客户端: userId={}, role={}, deviceId={}", client.getUserId(), client.getRole(), client.getSessionId());
+                    
+                    // 跳过主播自己，但允许proxy角色接收通知（proxy通常也是观众）
+                    if (client.getUserId().equals(streamerUserId) && "anchor".equals(client.getRole())) {
+                        log.info("跳过主播自己: userId={}, role={}", streamerUserId, client.getRole());
                         continue;
                     }
                     
@@ -243,25 +251,41 @@ public class StreamEventServiceImpl implements StreamEventService {
                         if (session != null && session.isOpen()) {
                             session.sendMessage(new TextMessage(messageJson));
                             notifiedCount++;
-                            log.debug("推流开始通知已发送给观众: userId={}, deviceId={}", client.getUserId(), client.getSessionId());
+                            log.info("推流开始通知已发送给观众: userId={}, role={}, deviceId={}", client.getUserId(), client.getRole(), client.getSessionId());
+                        } else {
+                            log.warn("客户端会话无效: userId={}, role={}, deviceId={}, sessionOpen={}", 
+                                    client.getUserId(), client.getRole(), client.getSessionId(), session != null ? session.isOpen() : false);
                         }
                     } catch (IOException e) {
-                        log.error("向观众发送推流开始通知失败: userId={}, deviceId={}, error={}", 
-                                client.getUserId(), client.getSessionId(), e.getMessage());
+                        log.error("向观众发送推流开始通知失败: userId={}, role={}, deviceId={}, error={}", 
+                                client.getUserId(), client.getRole(), client.getSessionId(), e.getMessage());
                     }
                 }
                 
                 log.info("推流开始通知已发送给{}个观众: streamId={}, streamerUserId={}, roomId={}", 
                         notifiedCount, streamId, streamerUserId, roomId);
-            } else {
-                // 如果无法获取房间ID，则向所有在线用户发送通知（除了主播）
-                log.warn("无法获取房间ID，向所有在线用户发送推流开始通知: streamId={}, streamerUserId={}", streamId, streamerUserId);
+            }
+            
+            // 如果房间内没有观众，或者房间ID为空，则向所有在线用户发送通知（除了主播）
+            if (notifiedCount == 0) {
+                log.info("房间内无观众，向所有在线用户发送推流开始通知: streamId={}, streamerUserId={}", streamId, streamerUserId);
                 
                 // 获取所有房间的所有客户端
-                for (RoomService.Room room : roomService.getRooms().values()) {
+                Map<String, RoomService.Room> allRooms = roomService.getRooms();
+                log.info("当前有{}个房间", allRooms.size());
+                
+                for (Map.Entry<String, RoomService.Room> entry : allRooms.entrySet()) {
+                    String currentRoomId = entry.getKey();
+                    RoomService.Room room = entry.getValue();
+                    
+                    log.info("房间{}中有{}个客户端", currentRoomId, room.getClients().size());
+                    
                     for (RoomService.Client client : room.getClients()) {
-                        // 跳过主播自己
-                        if (client.getUserId().equals(streamerUserId)) {
+                        log.info("检查客户端: userId={}, role={}, deviceId={}, roomId={}", client.getUserId(), client.getRole(), client.getSessionId(), currentRoomId);
+                        
+                        // 跳过主播自己，但允许proxy角色接收通知（proxy通常也是观众）
+                        if (client.getUserId().equals(streamerUserId) && "anchor".equals(client.getRole())) {
+                            log.info("跳过主播自己: userId={}, role={}, roomId={}", streamerUserId, client.getRole(), currentRoomId);
                             continue;
                         }
                         
@@ -270,17 +294,27 @@ public class StreamEventServiceImpl implements StreamEventService {
                             if (session != null && session.isOpen()) {
                                 session.sendMessage(new TextMessage(messageJson));
                                 notifiedCount++;
-                                log.debug("推流开始通知已发送给观众: userId={}, deviceId={}", client.getUserId(), client.getSessionId());
+                                log.info("推流开始通知已发送给观众: userId={}, role={}, deviceId={}, roomId={}", 
+                                        client.getUserId(), client.getRole(), client.getSessionId(), currentRoomId);
+                            } else {
+                                log.warn("客户端会话无效: userId={}, role={}, deviceId={}, roomId={}, sessionOpen={}", 
+                                        client.getUserId(), client.getRole(), client.getSessionId(), currentRoomId, 
+                                        session != null ? session.isOpen() : false);
                             }
                         } catch (IOException e) {
-                            log.error("向观众发送推流开始通知失败: userId={}, deviceId={}, error={}", 
-                                    client.getUserId(), client.getSessionId(), e.getMessage());
+                            log.error("向观众发送推流开始通知失败: userId={}, role={}, deviceId={}, roomId={}, error={}", 
+                                    client.getUserId(), client.getRole(), client.getSessionId(), currentRoomId, e.getMessage());
                         }
                     }
                 }
                 
                 log.info("推流开始通知已发送给{}个观众（全局广播）: streamId={}, streamerUserId={}", 
                         notifiedCount, streamId, streamerUserId);
+            }
+            
+            // 如果仍然没有通知到任何人，记录警告
+            if (notifiedCount == 0) {
+                log.warn("没有找到任何在线的观众来接收推流开始通知: streamId={}, streamerUserId={}", streamId, streamerUserId);
             }
             
         } catch (Exception e) {
@@ -298,13 +332,20 @@ public class StreamEventServiceImpl implements StreamEventService {
             
             int notifiedCount = 0;
             
+            // 首先尝试向特定房间的观众发送通知
             if (roomId != null) {
+                log.info("尝试向房间{}发送推流结束通知: streamId={}, streamerUserId={}", roomId, streamId, streamerUserId);
+                
                 // 获取房间内所有观众（除了主播）
                 List<RoomService.Client> roomClients = roomService.getRoomClients(roomId);
+                log.info("房间{}中有{}个客户端连接", roomId, roomClients.size());
                 
                 for (RoomService.Client client : roomClients) {
-                    // 跳过主播自己
-                    if (client.getUserId().equals(streamerUserId)) {
+                    log.info("检查客户端: userId={}, role={}, deviceId={}", client.getUserId(), client.getRole(), client.getSessionId());
+                    
+                    // 跳过主播自己，但允许proxy角色接收通知（proxy通常也是观众）
+                    if (client.getUserId().equals(streamerUserId) && "anchor".equals(client.getRole())) {
+                        log.info("跳过主播自己: userId={}, role={}", streamerUserId, client.getRole());
                         continue;
                     }
                     
@@ -313,25 +354,41 @@ public class StreamEventServiceImpl implements StreamEventService {
                         if (session != null && session.isOpen()) {
                             session.sendMessage(new TextMessage(messageJson));
                             notifiedCount++;
-                            log.debug("推流结束通知已发送给观众: userId={}, deviceId={}", client.getUserId(), client.getSessionId());
+                            log.info("推流结束通知已发送给观众: userId={}, role={}, deviceId={}", client.getUserId(), client.getRole(), client.getSessionId());
+                        } else {
+                            log.warn("客户端会话无效: userId={}, role={}, deviceId={}, sessionOpen={}", 
+                                    client.getUserId(), client.getRole(), client.getSessionId(), session != null ? session.isOpen() : false);
                         }
                     } catch (IOException e) {
-                        log.error("向观众发送推流结束通知失败: userId={}, deviceId={}, error={}", 
-                                client.getUserId(), client.getSessionId(), e.getMessage());
+                        log.error("向观众发送推流结束通知失败: userId={}, role={}, deviceId={}, error={}", 
+                                client.getUserId(), client.getRole(), client.getSessionId(), e.getMessage());
                     }
                 }
                 
                 log.info("推流结束通知已发送给{}个观众: streamId={}, streamerUserId={}, roomId={}", 
                         notifiedCount, streamId, streamerUserId, roomId);
-            } else {
-                // 如果无法获取房间ID，则向所有在线用户发送通知（除了主播）
-                log.warn("无法获取房间ID，向所有在线用户发送推流结束通知: streamId={}, streamerUserId={}", streamId, streamerUserId);
+            }
+            
+            // 如果房间内没有观众，或者房间ID为空，则向所有在线用户发送通知（除了主播）
+            if (notifiedCount == 0) {
+                log.info("房间内无观众，向所有在线用户发送推流结束通知: streamId={}, streamerUserId={}", streamId, streamerUserId);
                 
                 // 获取所有房间的所有客户端
-                for (RoomService.Room room : roomService.getRooms().values()) {
+                Map<String, RoomService.Room> allRooms = roomService.getRooms();
+                log.info("当前有{}个房间", allRooms.size());
+                
+                for (Map.Entry<String, RoomService.Room> entry : allRooms.entrySet()) {
+                    String currentRoomId = entry.getKey();
+                    RoomService.Room room = entry.getValue();
+                    
+                    log.info("房间{}中有{}个客户端", currentRoomId, room.getClients().size());
+                    
                     for (RoomService.Client client : room.getClients()) {
-                        // 跳过主播自己
-                        if (client.getUserId().equals(streamerUserId)) {
+                        log.info("检查客户端: userId={}, role={}, deviceId={}, roomId={}", client.getUserId(), client.getRole(), client.getSessionId(), currentRoomId);
+                        
+                        // 跳过主播自己，但允许proxy角色接收通知（proxy通常也是观众）
+                        if (client.getUserId().equals(streamerUserId) && "anchor".equals(client.getRole())) {
+                            log.info("跳过主播自己: userId={}, role={}, roomId={}", streamerUserId, client.getRole(), currentRoomId);
                             continue;
                         }
                         
@@ -340,17 +397,27 @@ public class StreamEventServiceImpl implements StreamEventService {
                             if (session != null && session.isOpen()) {
                                 session.sendMessage(new TextMessage(messageJson));
                                 notifiedCount++;
-                                log.debug("推流结束通知已发送给观众: userId={}, deviceId={}", client.getUserId(), client.getSessionId());
+                                log.info("推流结束通知已发送给观众: userId={}, role={}, deviceId={}, roomId={}", 
+                                        client.getUserId(), client.getRole(), client.getSessionId(), currentRoomId);
+                            } else {
+                                log.warn("客户端会话无效: userId={}, role={}, deviceId={}, roomId={}, sessionOpen={}", 
+                                        client.getUserId(), client.getRole(), client.getSessionId(), currentRoomId, 
+                                        session != null ? session.isOpen() : false);
                             }
                         } catch (IOException e) {
-                            log.error("向观众发送推流结束通知失败: userId={}, deviceId={}, error={}", 
-                                    client.getUserId(), client.getSessionId(), e.getMessage());
+                            log.error("向观众发送推流结束通知失败: userId={}, role={}, deviceId={}, roomId={}, error={}", 
+                                    client.getUserId(), client.getRole(), client.getSessionId(), currentRoomId, e.getMessage());
                         }
                     }
                 }
                 
                 log.info("推流结束通知已发送给{}个观众（全局广播）: streamId={}, streamerUserId={}", 
                         notifiedCount, streamId, streamerUserId);
+            }
+            
+            // 如果仍然没有通知到任何人，记录警告
+            if (notifiedCount == 0) {
+                log.warn("没有找到任何在线的观众来接收推流结束通知: streamId={}, streamerUserId={}", streamId, streamerUserId);
             }
             
         } catch (Exception e) {
@@ -364,27 +431,36 @@ public class StreamEventServiceImpl implements StreamEventService {
      */
     private String extractRoomIdFromStreamId(String streamId) {
         try {
+            log.info("开始解析streamId获取房间ID: streamId={}", streamId);
+            
             // 从数据库中查找streamId对应的用户ID
             Optional<StreamInfo> streamInfoOpt = streamInfoRepository.findByStreamId(streamId);
             if (streamInfoOpt.isPresent()) {
                 String userId = streamInfoOpt.get().getUserId();
+                log.info("从数据库中找到streamId对应的用户ID: streamId={}, userId={}", streamId, userId);
                 // 这里需要根据业务逻辑确定用户所在的房间
                 // 假设用户ID就是房间ID，或者通过其他方式获取房间ID
                 return userId; // 暂时返回用户ID作为房间ID
             }
+            
+            log.info("数据库中未找到streamId，尝试从格式解析: streamId={}", streamId);
             
             // 如果数据库中找不到，尝试从streamId格式解析
             if (streamId.startsWith("stream_")) {
                 // 格式：stream_userId_timestamp
                 String[] parts = streamId.split("_", 3);
                 if (parts.length >= 2) {
-                    return parts[1]; // 返回userId作为房间ID
+                    String userId = parts[1];
+                    log.info("从streamId格式解析出用户ID: streamId={}, userId={}", streamId, userId);
+                    return userId; // 返回userId作为房间ID
                 }
             } else if (streamId.contains("_")) {
                 // 格式：userId_streamName_timestamp
                 String[] parts = streamId.split("_", 3);
                 if (parts.length >= 1) {
-                    return parts[0]; // 返回userId作为房间ID
+                    String userId = parts[0];
+                    log.info("从streamId格式解析出用户ID: streamId={}, userId={}", streamId, userId);
+                    return userId; // 返回userId作为房间ID
                 }
             } else if (streamId.contains("/")) {
                 // 格式：live/uuid，这种情况下无法直接获取房间ID

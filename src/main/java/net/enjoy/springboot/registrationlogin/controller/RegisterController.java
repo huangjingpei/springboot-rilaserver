@@ -145,7 +145,7 @@ public class RegisterController {
         }
     }
 
-    @GetMapping("/admin/users")
+    @GetMapping("/admin/all-users")
     public ResponseEntity<ApiResponse<List<UserDto>>> getAllUsers() {
         try {
             List<UserDto> users = userService.findAllUsers();

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代理客户端配置测试</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .response-area {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .success {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">代理客户端配置测试</h1>
+        
+        <!-- 保存/更新配置测试 -->
+        <div class="test-section">
+            <h3>保存/更新配置</h3>
+            <form id="saveConfigForm">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="userId" class="form-label">用户ID</label>
+                            <input type="text" class="form-control" id="userId" value="test_user_001" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="liveUrl" class="form-label">直播URL</label>
+                            <input type="text" class="form-control" id="liveUrl" value="https://live.douyin.com/123456" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="platform" class="form-label">平台</label>
+                            <input type="text" class="form-control" id="platform" value="douyin" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="quality" class="form-label">画质</label>
+                            <input type="text" class="form-control" id="quality" value="HD" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="anchorName" class="form-label">主播名称</label>
+                            <input type="text" class="form-control" id="anchorName" value="东方甄选" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="title" class="form-label">直播标题</label>
+                            <input type="text" class="form-control" id="title" value="美好生活，尽在东方甄选" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="m3u8Url" class="form-label">M3U8 URL</label>
+                            <input type="text" class="form-control" id="m3u8Url" value="http://pull-hls-spe-l1.douyincdn.com/fantasy/stream-694265330428019382_thirdhd/playlist.m3u8">
+                        </div>
+                        <div class="mb-3">
+                            <label for="flvUrl" class="form-label">FLV URL</label>
+                            <input type="text" class="form-control" id="flvUrl" value="http://pull-flv-spe-l1.douyincdn.com/fantasy/stream-694265330428019382_thirdhd.flv">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">保存配置</button>
+            </form>
+            <div id="saveResponse" class="response-area" style="display: none;"></div>
+        </div>
+
+        <!-- 获取配置测试 -->
+        <div class="test-section">
+            <h3>获取配置</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="getUserId" class="form-label">用户ID</label>
+                        <input type="text" class="form-control" id="getUserId" value="test_user_001">
+                    </div>
+                    <button type="button" class="btn btn-info" onclick="getConfig()">获取配置</button>
+                </div>
+            </div>
+            <div id="getResponse" class="response-area" style="display: none;"></div>
+        </div>
+
+        <!-- 删除配置测试 -->
+        <div class="test-section">
+            <h3>删除配置</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="deleteUserId" class="form-label">用户ID</label>
+                        <input type="text" class="form-control" id="deleteUserId" value="test_user_001">
+                    </div>
+                    <button type="button" class="btn btn-danger" onclick="deleteConfig()">删除配置</button>
+                </div>
+            </div>
+            <div id="deleteResponse" class="response-area" style="display: none;"></div>
+        </div>
+
+        <!-- 健康检查 -->
+        <div class="test-section">
+            <h3>健康检查</h3>
+            <button type="button" class="btn btn-secondary" onclick="healthCheck()">健康检查</button>
+            <div id="healthResponse" class="response-area" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = '/api/v1/proxy-config';
+
+        // 保存/更新配置
+        document.getElementById('saveConfigForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const configData = {
+                userId: document.getElementById('userId').value,
+                liveUrl: document.getElementById('liveUrl').value,
+                platform: document.getElementById('platform').value,
+                quality: document.getElementById('quality').value,
+                data: {
+                    platform: document.getElementById('platform').value,
+                    anchor_name: document.getElementById('anchorName').value,
+                    is_live: true,
+                    title: document.getElementById('title').value,
+                    quality: document.getElementById('quality').value,
+                    m3u8_url: document.getElementById('m3u8Url').value,
+                    flv_url: document.getElementById('flvUrl').value,
+                    record_url: document.getElementById('m3u8Url').value,
+                    new_cookies: null,
+                    new_token: null,
+                    extra: null
+                }
+            };
+
+            try {
+                const response = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(configData)
+                });
+
+                const result = await response.text();
+                showResponse('saveResponse', response.ok, result);
+            } catch (error) {
+                showResponse('saveResponse', false, '请求失败: ' + error.message);
+            }
+        });
+
+        // 获取配置
+        async function getConfig() {
+            const userId = document.getElementById('getUserId').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/${userId}`);
+                const result = await response.text();
+                showResponse('getResponse', response.ok, result);
+            } catch (error) {
+                showResponse('getResponse', false, '请求失败: ' + error.message);
+            }
+        }
+
+        // 删除配置
+        async function deleteConfig() {
+            const userId = document.getElementById('deleteUserId').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/${userId}`, {
+                    method: 'DELETE'
+                });
+                const result = response.ok ? '删除成功' : await response.text();
+                showResponse('deleteResponse', response.ok, result);
+            } catch (error) {
+                showResponse('deleteResponse', false, '请求失败: ' + error.message);
+            }
+        }
+
+        // 健康检查
+        async function healthCheck() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const result = await response.text();
+                showResponse('healthResponse', response.ok, result);
+            } catch (error) {
+                showResponse('healthResponse', false, '请求失败: ' + error.message);
+            }
+        }
+
+        // 显示响应结果
+        function showResponse(elementId, success, content) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'response-area ' + (success ? 'success' : 'error');
+            element.textContent = content;
+        }
+    </script>
+</body>
+</html>

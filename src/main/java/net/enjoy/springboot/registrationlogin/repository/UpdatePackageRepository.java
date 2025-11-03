@@ -15,17 +15,32 @@ import java.util.Optional;
 public interface UpdatePackageRepository extends JpaRepository<UpdatePackage, Long> {
     
     /**
-     * 根据平台查找最新的激活版本
+     * 根据应用标识符和平台查找最新的激活版本
+     */
+    Optional<UpdatePackage> findTopByAppIdAndPlatformAndIsActiveTrueOrderByReleaseDateDesc(String appId, String platform);
+    
+    /**
+     * 根据平台查找最新的激活版本（兼容旧版本）
      */
     Optional<UpdatePackage> findTopByPlatformAndIsActiveTrueOrderByReleaseDateDesc(String platform);
     
     /**
-     * 根据版本号和平台查找升级包
+     * 根据版本、应用标识符和平台查找升级包
+     */
+    Optional<UpdatePackage> findByVersionAndAppIdAndPlatform(String version, String appId, String platform);
+    
+    /**
+     * 根据版本号和平台查找升级包（兼容旧版本）
      */
     Optional<UpdatePackage> findByVersionAndPlatform(String version, String platform);
     
     /**
-     * 根据平台查找所有激活的升级包
+     * 根据应用标识符和平台查找所有激活的升级包
+     */
+    List<UpdatePackage> findByAppIdAndPlatformAndIsActiveTrueOrderByReleaseDateDesc(String appId, String platform);
+    
+    /**
+     * 根据平台查找所有激活的升级包（兼容旧版本）
      */
     List<UpdatePackage> findByPlatformAndIsActiveTrueOrderByReleaseDateDesc(String platform);
     
@@ -40,7 +55,12 @@ public interface UpdatePackageRepository extends JpaRepository<UpdatePackage, Lo
     Page<UpdatePackage> findAllByOrderByReleaseDateDesc(Pageable pageable);
     
     /**
-     * 根据平台分页查询升级包
+     * 根据应用标识符和平台分页查询升级包
+     */
+    Page<UpdatePackage> findByAppIdAndPlatformOrderByReleaseDateDesc(String appId, String platform, Pageable pageable);
+    
+    /**
+     * 根据平台分页查询升级包（兼容旧版本）
      */
     Page<UpdatePackage> findByPlatformOrderByReleaseDateDesc(String platform, Pageable pageable);
     
@@ -50,7 +70,12 @@ public interface UpdatePackageRepository extends JpaRepository<UpdatePackage, Lo
     boolean existsByVersion(String version);
     
     /**
-     * 根据版本号和平台检查是否存在
+     * 根据版本、应用标识符和平台检查是否存在
+     */
+    boolean existsByVersionAndAppIdAndPlatform(String version, String appId, String platform);
+    
+    /**
+     * 根据版本号和平台检查是否存在（兼容旧版本）
      */
     boolean existsByVersionAndPlatform(String version, String platform);
     
@@ -60,7 +85,13 @@ public interface UpdatePackageRepository extends JpaRepository<UpdatePackage, Lo
     List<UpdatePackage> findByIsActiveTrueOrderByReleaseDateDesc();
     
     /**
-     * 根据平台查找强制更新的版本
+     * 根据应用标识符和平台查找强制更新的版本
+     */
+    @Query("SELECT u FROM UpdatePackage u WHERE u.appId = :appId AND u.platform = :platform AND u.isActive = true AND u.isMandatory = true ORDER BY u.releaseDate DESC")
+    List<UpdatePackage> findMandatoryUpdatesByAppIdAndPlatform(@Param("appId") String appId, @Param("platform") String platform);
+    
+    /**
+     * 根据平台查找强制更新的版本（兼容旧版本）
      */
     @Query("SELECT u FROM UpdatePackage u WHERE u.platform = :platform AND u.isActive = true AND u.isMandatory = true ORDER BY u.releaseDate DESC")
     List<UpdatePackage> findMandatoryUpdatesByPlatform(@Param("platform") String platform);

@@ -23,7 +23,7 @@ public class AppController {
     @GetMapping("/{id}")
     public ResponseEntity<AppDto> getAppById(@PathVariable Long id) {
         try {
-            AppDto app = appService.getAppById(id);
+            AppDto app = appService.getAppDtoById(id);
             return ResponseEntity.ok(app);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
@@ -218,7 +218,7 @@ public class AppController {
     @PutMapping("/{id}/active")
     public ResponseEntity<Void> setAppActive(@PathVariable Long id, @RequestParam boolean active) {
         try {
-            appService.setAppActive(id, active);
+            appService.setAppActiveStatus(id, active);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
@@ -239,7 +239,7 @@ public class AppController {
     }
 
     // 简单搜索（GET请求）
-    @GetMapping("/search")
+    @GetMapping("/search-simple")
     public ResponseEntity<Page<AppDto>> searchAppsGet(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) App.AppType type,
@@ -269,4 +269,4 @@ public class AppController {
         Page<AppDto> apps = appService.searchApps(request);
         return ResponseEntity.ok(apps);
     }
-} 
+}

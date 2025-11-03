@@ -15,11 +15,12 @@ public interface UpdateService {
     
     /**
      * 检查是否有可用更新
+     * @param appId 应用标识符
      * @param currentVersion 当前版本
      * @param platform 平台信息
      * @return 更新检查响应
      */
-    UpdateCheckResponse checkForUpdate(String currentVersion, String platform);
+    UpdateCheckResponse checkForUpdate(String appId, String currentVersion, String platform);
     
     /**
      * 获取下载URL
@@ -44,7 +45,16 @@ public interface UpdateService {
     Page<UpdatePackage> getAllUpdatePackages(Pageable pageable);
     
     /**
-     * 根据平台获取升级包（分页）
+     * 根据应用标识符和平台获取升级包（分页）
+     * @param appId 应用标识符
+     * @param platform 平台信息
+     * @param pageable 分页参数
+     * @return 升级包列表
+     */
+    Page<UpdatePackage> getUpdatePackagesByAppIdAndPlatform(String appId, String platform, Pageable pageable);
+    
+    /**
+     * 根据平台获取升级包（分页，兼容旧版本）
      * @param platform 平台信息
      * @param pageable 分页参数
      * @return 升级包列表
@@ -59,7 +69,16 @@ public interface UpdateService {
     UpdatePackage getUpdatePackageById(Long id);
     
     /**
-     * 根据版本号和平台获取升级包
+     * 根据版本号、应用标识符和平台获取升级包
+     * @param version 版本号
+     * @param appId 应用标识符
+     * @param platform 平台信息
+     * @return 升级包
+     */
+    UpdatePackage getUpdatePackageByVersionAndAppIdAndPlatform(String version, String appId, String platform);
+    
+    /**
+     * 根据版本号和平台获取升级包（兼容旧版本）
      * @param version 版本号
      * @param platform 平台信息
      * @return 升级包
@@ -96,7 +115,15 @@ public interface UpdateService {
     List<String> getAllPlatforms();
     
     /**
-     * 获取强制更新的版本
+     * 根据应用标识符和平台获取强制更新的版本
+     * @param appId 应用标识符
+     * @param platform 平台信息
+     * @return 强制更新版本列表
+     */
+    List<UpdatePackage> getMandatoryUpdates(String appId, String platform);
+    
+    /**
+     * 根据平台获取强制更新的版本（兼容旧版本）
      * @param platform 平台信息
      * @return 强制更新版本列表
      */

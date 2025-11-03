@@ -84,6 +84,8 @@ public class SpringSessionSecurityConfig {
                     "/api/apps/**",  // 应用商城API
                     "/api/stream-limits/**", // 推流限制API
                     "/api/v1/updates/**",  // 升级系统API - 允许公开访问
+                    "/api/v1/proxy-config/health",  // 代理客户端配置健康检查 - 允许公开访问
+                    "/proxy-config-test.html",  // 代理客户端配置测试页面
                     "/register/**",
                     "/register-api.html",
                     "/register-simple.html",
@@ -136,4 +138,4 @@ public class SpringSessionSecurityConfig {
         auth.userDetailsService(userDetailsService)
             .passwordEncoder(passwordEncoder());
     }
-} 
+}

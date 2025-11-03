@@ -1,62 +1,73 @@
 package net.enjoy.springboot.registrationlogin.dto;
 
 import net.enjoy.springboot.registrationlogin.entity.App;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 public class AppDto {
     private Long id;
+    private String appId;
     private String name;
     private String description;
-    private String shortDescription;
-    private String appIcon;
-    private List<String> screenshots;
-    private BigDecimal rating;
-    private Integer ratingCount;
-    private BigDecimal price;
-    private BigDecimal originalPrice;
-    private App.AppType type;
-    private List<App.Platform> platforms;
-    private Long downloadCount;
-    private String fileSize;
-    private String version;
+    private String currentVersion;
+    private String minVersion;
+    private String recommendedVersion;
+    private String iconUrl;
+    private String websiteUrl;
     private String developer;
-    private LocalDateTime releaseDate;
-    private LocalDateTime lastUpdated;
-    private Boolean isFeatured;
+    private String developerEmail;
+    private String license;
+    private String features;
+    private String changelog;
     private Boolean isActive;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private List<AppDownloadDto> downloads;
-    private List<AppReviewDto> reviews;
+    private Boolean isPublic;
+    private Boolean isMandatoryUpdate;
+    private String category;
+    private String tags;
+    private App.AppType appType;
+    private App.Platform platform;
+    private Boolean isFree;
+    private Boolean isFeatured;
+    private Long downloadCount;
+    private Double rating;
+    private Long ratingCount;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private Instant lastUpdateDate;
 
     // 构造函数
     public AppDto() {}
 
     public AppDto(App app) {
         this.id = app.getId();
+        this.appId = app.getAppId();
         this.name = app.getName();
         this.description = app.getDescription();
-        this.shortDescription = app.getShortDescription();
-        this.appIcon = app.getAppIcon();
-        this.screenshots = app.getScreenshots();
+        this.currentVersion = app.getCurrentVersion();
+        this.minVersion = app.getMinVersion();
+        this.recommendedVersion = app.getRecommendedVersion();
+        this.iconUrl = app.getIconUrl();
+        this.websiteUrl = app.getWebsiteUrl();
+        this.developer = app.getDeveloper();
+        this.developerEmail = app.getDeveloperEmail();
+        this.license = app.getLicense();
+        this.features = app.getFeatures();
+        this.changelog = app.getChangelog();
+        this.isActive = app.getIsActive();
+        this.isPublic = app.getIsPublic();
+        this.isMandatoryUpdate = app.getIsMandatoryUpdate();
+        this.category = app.getCategory();
+        this.tags = app.getTags();
+        this.appType = app.getAppType();
+        this.platform = app.getPlatform();
+        this.isFree = app.getIsFree();
+        this.isFeatured = app.getIsFeatured();
+        this.downloadCount = app.getDownloadCount();
         this.rating = app.getRating();
         this.ratingCount = app.getRatingCount();
-        this.price = app.getPrice();
-        this.originalPrice = app.getOriginalPrice();
-        this.type = app.getType();
-        this.platforms = app.getPlatforms();
-        this.downloadCount = app.getDownloadCount();
-        this.fileSize = app.getFileSize();
-        this.version = app.getVersion();
-        this.developer = app.getDeveloper();
-        this.releaseDate = app.getReleaseDate();
-        this.lastUpdated = app.getLastUpdated();
-        this.isFeatured = app.getIsFeatured();
-        this.isActive = app.getIsActive();
         this.createdAt = app.getCreatedAt();
         this.updatedAt = app.getUpdatedAt();
+        this.lastUpdateDate = app.getLastUpdateDate();
     }
 
     // Getters and Setters
@@ -66,6 +77,14 @@ public class AppDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public void setAppId(String appId) {
+        this.appId = appId;
     }
 
     public String getName() {
@@ -84,100 +103,44 @@ public class AppDto {
         this.description = description;
     }
 
-    public String getShortDescription() {
-        return shortDescription;
+    public String getCurrentVersion() {
+        return currentVersion;
     }
 
-    public void setShortDescription(String shortDescription) {
-        this.shortDescription = shortDescription;
+    public void setCurrentVersion(String currentVersion) {
+        this.currentVersion = currentVersion;
     }
 
-    public String getAppIcon() {
-        return appIcon;
+    public String getMinVersion() {
+        return minVersion;
     }
 
-    public void setAppIcon(String appIcon) {
-        this.appIcon = appIcon;
+    public void setMinVersion(String minVersion) {
+        this.minVersion = minVersion;
     }
 
-    public List<String> getScreenshots() {
-        return screenshots;
+    public String getRecommendedVersion() {
+        return recommendedVersion;
     }
 
-    public void setScreenshots(List<String> screenshots) {
-        this.screenshots = screenshots;
+    public void setRecommendedVersion(String recommendedVersion) {
+        this.recommendedVersion = recommendedVersion;
     }
 
-    public BigDecimal getRating() {
-        return rating;
+    public String getIconUrl() {
+        return iconUrl;
     }
 
-    public void setRating(BigDecimal rating) {
-        this.rating = rating;
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
     }
 
-    public Integer getRatingCount() {
-        return ratingCount;
+    public String getWebsiteUrl() {
+        return websiteUrl;
     }
 
-    public void setRatingCount(Integer ratingCount) {
-        this.ratingCount = ratingCount;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public BigDecimal getOriginalPrice() {
-        return originalPrice;
-    }
-
-    public void setOriginalPrice(BigDecimal originalPrice) {
-        this.originalPrice = originalPrice;
-    }
-
-    public App.AppType getType() {
-        return type;
-    }
-
-    public void setType(App.AppType type) {
-        this.type = type;
-    }
-
-    public List<App.Platform> getPlatforms() {
-        return platforms;
-    }
-
-    public void setPlatforms(List<App.Platform> platforms) {
-        this.platforms = platforms;
-    }
-
-    public Long getDownloadCount() {
-        return downloadCount;
-    }
-
-    public void setDownloadCount(Long downloadCount) {
-        this.downloadCount = downloadCount;
-    }
-
-    public String getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(String fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
+    public void setWebsiteUrl(String websiteUrl) {
+        this.websiteUrl = websiteUrl;
     }
 
     public String getDeveloper() {
@@ -188,28 +151,36 @@ public class AppDto {
         this.developer = developer;
     }
 
-    public LocalDateTime getReleaseDate() {
-        return releaseDate;
+    public String getDeveloperEmail() {
+        return developerEmail;
     }
 
-    public void setReleaseDate(LocalDateTime releaseDate) {
-        this.releaseDate = releaseDate;
+    public void setDeveloperEmail(String developerEmail) {
+        this.developerEmail = developerEmail;
     }
 
-    public LocalDateTime getLastUpdated() {
-        return lastUpdated;
+    public String getLicense() {
+        return license;
     }
 
-    public void setLastUpdated(LocalDateTime lastUpdated) {
-        this.lastUpdated = lastUpdated;
+    public void setLicense(String license) {
+        this.license = license;
     }
 
-    public Boolean getIsFeatured() {
-        return isFeatured;
+    public String getFeatures() {
+        return features;
     }
 
-    public void setIsFeatured(Boolean isFeatured) {
-        this.isFeatured = isFeatured;
+    public void setFeatures(String features) {
+        this.features = features;
+    }
+
+    public String getChangelog() {
+        return changelog;
+    }
+
+    public void setChangelog(String changelog) {
+        this.changelog = changelog;
     }
 
     public Boolean getIsActive() {
@@ -220,35 +191,115 @@ public class AppDto {
         this.isActive = isActive;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public Boolean getIsMandatoryUpdate() {
+        return isMandatoryUpdate;
+    }
+
+    public void setIsMandatoryUpdate(Boolean isMandatoryUpdate) {
+        this.isMandatoryUpdate = isMandatoryUpdate;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public App.AppType getAppType() {
+        return appType;
+    }
+
+    public void setAppType(App.AppType appType) {
+        this.appType = appType;
+    }
+
+    public App.Platform getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(App.Platform platform) {
+        this.platform = platform;
+    }
+
+    public Boolean getIsFree() {
+        return isFree;
+    }
+
+    public void setIsFree(Boolean isFree) {
+        this.isFree = isFree;
+    }
+
+    public Boolean getIsFeatured() {
+        return isFeatured;
+    }
+
+    public void setIsFeatured(Boolean isFeatured) {
+        this.isFeatured = isFeatured;
+    }
+
+    public Long getDownloadCount() {
+        return downloadCount;
+    }
+
+    public void setDownloadCount(Long downloadCount) {
+        this.downloadCount = downloadCount;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
+
+    public Long getRatingCount() {
+        return ratingCount;
+    }
+
+    public void setRatingCount(Long ratingCount) {
+        this.ratingCount = ratingCount;
+    }
+
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public List<AppDownloadDto> getDownloads() {
-        return downloads;
+    public Instant getLastUpdateDate() {
+        return lastUpdateDate;
     }
 
-    public void setDownloads(List<AppDownloadDto> downloads) {
-        this.downloads = downloads;
-    }
-
-    public List<AppReviewDto> getReviews() {
-        return reviews;
-    }
-
-    public void setReviews(List<AppReviewDto> reviews) {
-        this.reviews = reviews;
+    public void setLastUpdateDate(Instant lastUpdateDate) {
+        this.lastUpdateDate = lastUpdateDate;
     }
 } 

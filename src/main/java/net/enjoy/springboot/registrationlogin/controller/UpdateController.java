@@ -1,8 +1,11 @@
 package net.enjoy.springboot.registrationlogin.controller;
 
+import net.enjoy.springboot.registrationlogin.dto.AppDto;
 import net.enjoy.springboot.registrationlogin.dto.UpdateCheckResponse;
 import net.enjoy.springboot.registrationlogin.dto.UpdatePackageDto;
+import net.enjoy.springboot.registrationlogin.entity.App;
 import net.enjoy.springboot.registrationlogin.entity.UpdatePackage;
+import net.enjoy.springboot.registrationlogin.service.AppService;
 import net.enjoy.springboot.registrationlogin.service.UpdateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +36,11 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
- * 升级控制器
- * 提供软件升级相关的REST API
+ * 多应用升级控制器
+ * 提供支持多个应用的通用升级系统REST API
  */
 @RestController
 @RequestMapping("/api/v1/updates")
@@ -48,18 +52,37 @@ public class UpdateController {
     @Autowired
     private UpdateService updateService;
     
+    @Autowired
+    private AppService appService;
+    
     /**
-     * 检查最新版本
+     * 检查应用最新版本
      * GET /api/v1/updates/latest
      */
     @GetMapping("/latest")
     public ResponseEntity<UpdateCheckResponse> checkLatestUpdate(
+            @RequestParam @NotBlank(message = "应用标识符不能为空") String appId,
             @RequestParam @NotBlank(message = "当前版本不能为空") String currentVersion,
             @RequestParam @NotBlank(message = "平台信息不能为空") String platform) {
         
-        logger.info("检查更新请求: version={}, platform={}", currentVersion, platform);
+        logger.info("检查应用更新请求: appId={}, version={}, platform={}", appId, currentVersion, platform);
         
-        UpdateCheckResponse response = updateService.checkForUpdate(currentVersion, platform);
+        // 验证应用是否存在且激活
+        Optional<App> appOpt = appService.getAppByAppId(appId);
+        if (appOpt.isEmpty()) {
+            logger.warn("应用不存在: appId={}", appId);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new UpdateCheckResponse(false, "应用不存在: " + appId));
+        }
+        
+        App app = appOpt.get();
+        if (!app.getIsActive()) {
+            logger.warn("应用已停用: appId={}", appId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new UpdateCheckResponse(false, "应用已停用: " + appId));
+        }
+        
+        UpdateCheckResponse response = updateService.checkForUpdate(appId, currentVersion, platform);
         return ResponseEntity.ok(response);
     }
     
@@ -70,12 +93,13 @@ public class UpdateController {
     @GetMapping("/download/{version}")
     public ResponseEntity<Resource> downloadUpdate(
             @PathVariable @Pattern(regexp = "^[0-9]+\\.[0-9]+\\.[0-9]+.*$", message = "版本号格式无效") String version,
+            @RequestParam @NotBlank(message = "应用标识符不能为空") String appId,
             @RequestParam @NotBlank(message = "平台信息不能为空") String platform) {
         
-        logger.info("下载请求: version={}, platform={}", version, platform);
+        logger.info("下载请求: appId={}, version={}, platform={}", appId, version, platform);
         
         try {
-            UpdatePackage updatePackage = updateService.getUpdatePackageByVersionAndPlatform(version, platform);
+            UpdatePackage updatePackage = updateService.getUpdatePackageByVersionAndAppIdAndPlatform(version, appId, platform);
             
             logger.info("找到升级包: ID={}, 文件URL={}", updatePackage.getId(), updatePackage.getFileUrl());
             
@@ -120,12 +144,13 @@ public class UpdateController {
     @GetMapping("/file/{version}")
     public ResponseEntity<Resource> downloadFile(
             @PathVariable String version,
+            @RequestParam @NotBlank(message = "应用标识符不能为空") String appId,
             @RequestParam String platform) {
         
-        logger.info("直接下载文件: version={}, platform={}", version, platform);
+        logger.info("直接下载文件: appId={}, version={}, platform={}", appId, version, platform);
         
         try {
-            UpdatePackage updatePackage = updateService.getUpdatePackageByVersionAndPlatform(version, platform);
+            UpdatePackage updatePackage = updateService.getUpdatePackageByVersionAndAppIdAndPlatform(version, appId, platform);
             
             if (!updatePackage.getIsActive()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -176,7 +201,25 @@ public class UpdateController {
     }
     
     /**
-     * 根据平台获取升级包
+     * 根据应用标识符和平台获取升级包
+     * GET /api/v1/updates/app/{appId}/platform/{platform}
+     */
+    @GetMapping("/app/{appId}/platform/{platform}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UpdatePackage>> getUpdatePackagesByAppIdAndPlatform(
+            @PathVariable String appId,
+            @PathVariable String platform,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("releaseDate").descending());
+        Page<UpdatePackage> packages = updateService.getUpdatePackagesByAppIdAndPlatform(appId, platform, pageable);
+        
+        return ResponseEntity.ok(packages);
+    }
+    
+    /**
+     * 根据平台获取升级包（兼容旧版本）
      * GET /api/v1/updates/platform/{platform}
      */
     @GetMapping("/platform/{platform}")
@@ -211,16 +254,18 @@ public class UpdateController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UpdatePackage> uploadUpdatePackage(
             @RequestParam("file") MultipartFile file,
+            @RequestParam("appId") String appId,
             @RequestParam("version") String version,
             @RequestParam("platform") String platform,
             @RequestParam(value = "releaseNotes", required = false) String releaseNotes,
             @RequestParam(value = "isMandatory", defaultValue = "false") boolean isMandatory,
             @RequestParam(value = "description", required = false) String description) {
         
-        logger.info("上传升级包: version={}, platform={}, fileName={}", version, platform, file.getOriginalFilename());
+        logger.info("上传升级包: appId={}, version={}, platform={}, fileName={}", appId, version, platform, file.getOriginalFilename());
         
         UpdatePackageDto dto = new UpdatePackageDto();
         dto.setFile(file);
+        dto.setAppId(appId);
         dto.setVersion(version);
         dto.setPlatform(platform);
         dto.setReleaseNotes(releaseNotes);
@@ -288,12 +333,263 @@ public class UpdateController {
     
     /**
      * 获取强制更新的版本
+     * GET /api/v1/updates/mandatory/{appId}/{platform}
+     */
+    @GetMapping("/mandatory/{appId}/{platform}")
+    public ResponseEntity<List<UpdatePackage>> getMandatoryUpdates(
+            @PathVariable String appId,
+            @PathVariable String platform) {
+        List<UpdatePackage> mandatoryUpdates = updateService.getMandatoryUpdates(appId, platform);
+        return ResponseEntity.ok(mandatoryUpdates);
+    }
+    
+    /**
+     * 获取强制更新的版本（兼容旧版本）
      * GET /api/v1/updates/mandatory/{platform}
      */
     @GetMapping("/mandatory/{platform}")
-    public ResponseEntity<List<UpdatePackage>> getMandatoryUpdates(@PathVariable String platform) {
+    public ResponseEntity<List<UpdatePackage>> getMandatoryUpdatesByPlatform(@PathVariable String platform) {
         List<UpdatePackage> mandatoryUpdates = updateService.getMandatoryUpdates(platform);
         return ResponseEntity.ok(mandatoryUpdates);
+    }
+    
+    // ==================== 应用管理API ====================
+    
+    /**
+     * 获取所有应用
+     * GET /api/v1/updates/apps
+     */
+    @GetMapping("/apps")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<AppDto>> getAllApps(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        
+        Page<AppDto> apps = appService.getAllApps(page, size);
+        
+        return ResponseEntity.ok(apps);
+    }
+    
+    /**
+     * 获取激活的应用
+     * GET /api/v1/updates/apps/active
+     */
+    @GetMapping("/apps/active")
+    public ResponseEntity<Page<AppDto>> getActiveApps(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        Page<AppDto> apps = appService.getActiveApps(page, size);
+        
+        return ResponseEntity.ok(apps);
+    }
+    
+    /**
+     * 根据ID获取应用
+     * GET /api/v1/updates/apps/{id}
+     */
+    @GetMapping("/apps/{id}")
+    public ResponseEntity<App> getAppById(@PathVariable Long id) {
+        Optional<App> appOpt = appService.getAppById(id);
+        if (appOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(appOpt.get());
+    }
+    
+    /**
+     * 根据应用标识符获取应用
+     * GET /api/v1/updates/apps/app/{appId}
+     */
+    @GetMapping("/apps/app/{appId}")
+    public ResponseEntity<App> getAppByAppId(@PathVariable String appId) {
+        Optional<App> appOpt = appService.getAppByAppId(appId);
+        if (appOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(appOpt.get());
+    }
+    
+    /**
+     * 创建新应用
+     * POST /api/v1/updates/apps
+     */
+    @PostMapping("/apps")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<App> createApp(@Valid @RequestBody App app) {
+        App createdApp = appService.createApp(app);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdApp);
+    }
+    
+    /**
+     * 更新应用
+     * PUT /api/v1/updates/apps/{id}
+     */
+    @PutMapping("/apps/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<App> updateApp(@PathVariable Long id, @Valid @RequestBody App app) {
+        App updatedApp = appService.updateApp(id, app);
+        return ResponseEntity.ok(updatedApp);
+    }
+    
+    /**
+     * 删除应用
+     * DELETE /api/v1/updates/apps/{id}
+     */
+    @DeleteMapping("/apps/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> deleteApp(@PathVariable Long id) {
+        boolean deleted = appService.deleteApp(id);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", deleted);
+        response.put("message", deleted ? "应用删除成功" : "应用删除失败");
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * 设置应用激活状态
+     * PATCH /api/v1/updates/apps/{id}/active
+     */
+    @PatchMapping("/apps/{id}/active")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<App> setAppActive(@PathVariable Long id, @RequestParam boolean isActive) {
+        App app = appService.setAppActive(id, isActive);
+        return ResponseEntity.ok(app);
+    }
+    
+    /**
+     * 设置应用公开状态
+     * PATCH /api/v1/updates/apps/{id}/public
+     */
+    @PatchMapping("/apps/{id}/public")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<App> setAppPublic(@PathVariable Long id, @RequestParam boolean isPublic) {
+        App app = appService.setAppPublic(id, isPublic);
+        return ResponseEntity.ok(app);
+    }
+    
+    /**
+     * 设置应用强制更新状态
+     * PATCH /api/v1/updates/apps/{id}/mandatory-update
+     */
+    @PatchMapping("/apps/{id}/mandatory-update")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<App> setAppMandatoryUpdate(@PathVariable Long id, @RequestParam boolean isMandatoryUpdate) {
+        App app = appService.setAppMandatoryUpdate(id, isMandatoryUpdate);
+        return ResponseEntity.ok(app);
+    }
+    
+    /**
+     * 更新应用版本
+     * PATCH /api/v1/updates/apps/{id}/version
+     */
+    @PatchMapping("/apps/{id}/version")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<App> updateAppVersion(@PathVariable Long id, @RequestParam String version) {
+        App app = appService.updateAppVersion(id, version);
+        return ResponseEntity.ok(app);
+    }
+    
+    /**
+     * 更新应用推荐版本
+     * PATCH /api/v1/updates/apps/{id}/recommended-version
+     */
+    @PatchMapping("/apps/{id}/recommended-version")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<App> updateRecommendedVersion(@PathVariable Long id, @RequestParam String version) {
+        App app = appService.updateRecommendedVersion(id, version);
+        return ResponseEntity.ok(app);
+    }
+    
+    /**
+     * 更新应用最低版本
+     * PATCH /api/v1/updates/apps/{id}/min-version
+     */
+    @PatchMapping("/apps/{id}/min-version")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<App> updateMinVersion(@PathVariable Long id, @RequestParam String version) {
+        App app = appService.updateMinVersion(id, version);
+        return ResponseEntity.ok(app);
+    }
+    
+    /**
+     * 根据分类获取应用
+     * GET /api/v1/updates/apps/category/{category}
+     */
+    @GetMapping("/apps/category/{category}")
+    public ResponseEntity<List<App>> getAppsByCategory(@PathVariable String category) {
+        List<App> apps = appService.getAppsByCategory(category);
+        return ResponseEntity.ok(apps);
+    }
+    
+    /**
+     * 根据标签搜索应用
+     * GET /api/v1/updates/apps/tag/{tag}
+     */
+    @GetMapping("/apps/tag/{tag}")
+    public ResponseEntity<List<App>> getAppsByTag(@PathVariable String tag) {
+        List<App> apps = appService.searchAppsByTag(tag);
+        return ResponseEntity.ok(apps);
+    }
+    
+    /**
+     * 搜索应用
+     * GET /api/v1/updates/apps/search
+     */
+    @GetMapping("/apps/search")
+    public ResponseEntity<Page<App>> searchApps(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        Page<App> apps = appService.searchApps(keyword, pageable);
+        
+        return ResponseEntity.ok(apps);
+    }
+    
+    /**
+     * 获取所有应用分类
+     * GET /api/v1/updates/apps/categories
+     */
+    @GetMapping("/apps/categories")
+    public ResponseEntity<List<String>> getAllCategories() {
+        List<String> categories = appService.getAllCategories();
+        return ResponseEntity.ok(categories);
+    }
+    
+    /**
+     * 获取所有应用标签
+     * GET /api/v1/updates/apps/tags
+     */
+    @GetMapping("/apps/tags")
+    public ResponseEntity<List<String>> getAllTags() {
+        List<String> tags = appService.getAllTags();
+        return ResponseEntity.ok(tags);
+    }
+    
+    /**
+     * 根据开发者获取应用
+     * GET /api/v1/updates/apps/developer/{developer}
+     */
+    @GetMapping("/apps/developer/{developer}")
+    public ResponseEntity<List<App>> getAppsByDeveloper(@PathVariable String developer) {
+        List<App> apps = appService.getAppsByDeveloper(developer);
+        return ResponseEntity.ok(apps);
+    }
+    
+    /**
+     * 获取需要强制更新的应用
+     * GET /api/v1/updates/apps/mandatory-update
+     */
+    @GetMapping("/apps/mandatory-update")
+    public ResponseEntity<List<App>> getMandatoryUpdateApps() {
+        List<App> apps = appService.getMandatoryUpdateApps();
+        return ResponseEntity.ok(apps);
     }
     
     /**

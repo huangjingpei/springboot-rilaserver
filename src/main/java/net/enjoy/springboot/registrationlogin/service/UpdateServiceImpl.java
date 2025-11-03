@@ -2,6 +2,7 @@ package net.enjoy.springboot.registrationlogin.service;
 
 import net.enjoy.springboot.registrationlogin.dto.UpdateCheckResponse;
 import net.enjoy.springboot.registrationlogin.dto.UpdatePackageDto;
+import net.enjoy.springboot.registrationlogin.entity.App;
 import net.enjoy.springboot.registrationlogin.entity.UpdatePackage;
 import net.enjoy.springboot.registrationlogin.repository.UpdatePackageRepository;
 import org.slf4j.Logger;
@@ -42,6 +43,9 @@ public class UpdateServiceImpl implements UpdateService {
     @Autowired
     private FileStorageService fileStorageService;
     
+    @Autowired
+    private AppService appService;
+    
     @Value("${app.update.download-url-prefix:/api/v1/updates/file}")
     private String downloadUrlPrefix;
     
@@ -49,12 +53,12 @@ public class UpdateServiceImpl implements UpdateService {
     private String defaultHashAlgorithm;
     
     @Override
-    public UpdateCheckResponse checkForUpdate(String currentVersion, String platform) {
-        logger.info("检查更新: 当前版本={}, 平台={}", currentVersion, platform);
+    public UpdateCheckResponse checkForUpdate(String appId, String currentVersion, String platform) {
+        logger.info("检查更新: appId={}, 当前版本={}, 平台={}", appId, currentVersion, platform);
         
         // 验证参数
-        if (!StringUtils.hasText(currentVersion) || !StringUtils.hasText(platform)) {
-            logger.warn("参数无效: currentVersion={}, platform={}", currentVersion, platform);
+        if (!StringUtils.hasText(appId) || !StringUtils.hasText(currentVersion) || !StringUtils.hasText(platform)) {
+            logger.warn("参数无效: appId={}, currentVersion={}, platform={}", appId, currentVersion, platform);
             return new UpdateCheckResponse(false);
         }
         
@@ -65,9 +69,9 @@ public class UpdateServiceImpl implements UpdateService {
         }
         
         try {
-            // 查找最新的激活版本
+            // 查找最新的激活版本（根据appId和platform）
             Optional<UpdatePackage> latestPackageOpt = updatePackageRepository
-                .findTopByPlatformAndIsActiveTrueOrderByReleaseDateDesc(platform);
+                .findTopByAppIdAndPlatformAndIsActiveTrueOrderByReleaseDateDesc(appId, platform);
             
             if (latestPackageOpt.isPresent()) {
                 UpdatePackage latestPackage = latestPackageOpt.get();
@@ -84,7 +88,7 @@ public class UpdateServiceImpl implements UpdateService {
                     logger.info("已是最新版本: {}", currentVersion);
                 }
             } else {
-                logger.info("未找到平台 {} 的升级包", platform);
+                logger.info("未找到应用 {} 平台 {} 的升级包", appId, platform);
             }
             
         } catch (Exception e) {
@@ -112,17 +116,57 @@ public class UpdateServiceImpl implements UpdateService {
     
     @Override
     public UpdatePackage uploadUpdatePackage(UpdatePackageDto updatePackageDto) {
-        logger.info("上传升级包: 版本={}, 平台={}", updatePackageDto.getVersion(), updatePackageDto.getPlatform());
+        logger.info("上传升级包: appId={}, 版本={}, 平台={}", updatePackageDto.getAppId(), updatePackageDto.getVersion(), updatePackageDto.getPlatform());
         
         // 验证版本号格式
         if (!isValidVersion(updatePackageDto.getVersion())) {
             throw new IllegalArgumentException("版本号格式无效: " + updatePackageDto.getVersion());
         }
         
-        // 检查版本是否已存在
-        if (updatePackageRepository.existsByVersionAndPlatform(
-            updatePackageDto.getVersion(), updatePackageDto.getPlatform())) {
-            throw new IllegalArgumentException("该版本已存在: " + updatePackageDto.getVersion() + " for " + updatePackageDto.getPlatform());
+        // 自动创建或更新应用记录
+        ensureAppExists(updatePackageDto.getAppId(), updatePackageDto.getVersion(), updatePackageDto.getPlatform());
+        
+        // 检查版本是否已存在（根据应用标识符、版本和平台）
+        if (updatePackageRepository.existsByVersionAndAppIdAndPlatform(
+            updatePackageDto.getVersion(), updatePackageDto.getAppId(), updatePackageDto.getPlatform())) {
+            logger.warn("版本已存在，尝试更新现有记录: {} for {} on {}", 
+                updatePackageDto.getVersion(), updatePackageDto.getAppId(), updatePackageDto.getPlatform());
+            
+            // 查找现有记录并更新
+            Optional<UpdatePackage> existingPackage = updatePackageRepository
+                .findByVersionAndAppIdAndPlatform(updatePackageDto.getVersion(), updatePackageDto.getAppId(), updatePackageDto.getPlatform());
+            
+            if (existingPackage.isPresent()) {
+                UpdatePackage packageToUpdate = existingPackage.get();
+                
+                try {
+                    // 更新文件相关信息
+                    String fileUrl = fileStorageService.uploadFile(
+                        updatePackageDto.getFile(),
+                        updatePackageDto.getFile().getOriginalFilename(),
+                        "updates/" + updatePackageDto.getPlatform()
+                    );
+                    
+                    String fileHash = calculateFileHash(updatePackageDto.getFile());
+                    
+                    packageToUpdate.setFileUrl(fileUrl);
+                    packageToUpdate.setFileHash(fileHash);
+                    packageToUpdate.setFileName(updatePackageDto.getFile().getOriginalFilename());
+                    packageToUpdate.setFileSize(updatePackageDto.getFile().getSize());
+                    packageToUpdate.setFileType(updatePackageDto.getFile().getContentType());
+                    packageToUpdate.setReleaseNotes(updatePackageDto.getReleaseNotes());
+                    packageToUpdate.setDescription(updatePackageDto.getDescription());
+                    packageToUpdate.setIsMandatory(updatePackageDto.getIsMandatory());
+                    
+                    UpdatePackage savedPackage = updatePackageRepository.save(packageToUpdate);
+                    logger.info("升级包更新成功: ID={}", savedPackage.getId());
+                    return savedPackage;
+                    
+                } catch (IOException e) {
+                    logger.error("文件处理失败", e);
+                    throw new RuntimeException("文件处理失败: " + e.getMessage());
+                }
+            }
         }
         
         try {
@@ -138,6 +182,7 @@ public class UpdateServiceImpl implements UpdateService {
             
             // 创建升级包实体
             UpdatePackage updatePackage = new UpdatePackage();
+            updatePackage.setAppId(updatePackageDto.getAppId()); // 设置应用标识符
             updatePackage.setVersion(updatePackageDto.getVersion());
             updatePackage.setPlatform(updatePackageDto.getPlatform());
             updatePackage.setFileUrl(fileUrl);
@@ -168,6 +213,11 @@ public class UpdateServiceImpl implements UpdateService {
     }
     
     @Override
+    public Page<UpdatePackage> getUpdatePackagesByAppIdAndPlatform(String appId, String platform, Pageable pageable) {
+        return updatePackageRepository.findByAppIdAndPlatformOrderByReleaseDateDesc(appId, platform, pageable);
+    }
+    
+    @Override
     public Page<UpdatePackage> getUpdatePackagesByPlatform(String platform, Pageable pageable) {
         return updatePackageRepository.findByPlatformOrderByReleaseDateDesc(platform, pageable);
     }
@@ -176,6 +226,12 @@ public class UpdateServiceImpl implements UpdateService {
     public UpdatePackage getUpdatePackageById(Long id) {
         return updatePackageRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("升级包不存在: " + id));
+    }
+    
+    @Override
+    public UpdatePackage getUpdatePackageByVersionAndAppIdAndPlatform(String version, String appId, String platform) {
+        return updatePackageRepository.findByVersionAndAppIdAndPlatform(version, appId, platform)
+            .orElseThrow(() -> new RuntimeException("升级包不存在: version=" + version + ", appId=" + appId + ", platform=" + platform));
     }
     
     @Override
@@ -242,6 +298,11 @@ public class UpdateServiceImpl implements UpdateService {
     }
     
     @Override
+    public List<UpdatePackage> getMandatoryUpdates(String appId, String platform) {
+        return updatePackageRepository.findMandatoryUpdatesByAppIdAndPlatform(appId, platform);
+    }
+    
+    @Override
     public List<UpdatePackage> getMandatoryUpdates(String platform) {
         return updatePackageRepository.findMandatoryUpdatesByPlatform(platform);
     }
@@ -295,6 +356,63 @@ public class UpdateServiceImpl implements UpdateService {
             updatePackage.getFileName(),
             updatePackage.getDescription()
         );
+    }
+    
+    /**
+     * 确保应用记录存在，如果不存在则自动创建
+     */
+    private void ensureAppExists(String appId, String version, String platform) {
+        try {
+            // 检查应用是否存在
+            Optional<App> existingApp = appService.getAppByAppId(appId);
+            
+            if (existingApp.isEmpty()) {
+                // 应用不存在，自动创建
+                logger.info("应用不存在，自动创建: appId={}", appId);
+                
+                App newApp = new App();
+                newApp.setAppId(appId);
+                newApp.setName(appId); // 使用appId作为名称
+                newApp.setDescription("自动创建的应用");
+                newApp.setCurrentVersion(version);
+                newApp.setMinVersion("1.0.0");
+                newApp.setRecommendedVersion(version);
+                newApp.setDeveloper("Auto Created");
+                newApp.setDeveloperEmail("auto@system.com");
+                newApp.setLicense("Commercial");
+                newApp.setFeatures("自动创建");
+                newApp.setChangelog("自动创建的应用");
+                newApp.setIsActive(true);
+                newApp.setIsPublic(true);
+                newApp.setIsMandatoryUpdate(false);
+                newApp.setCategory("工具");
+                newApp.setTags("自动创建");
+                newApp.setAppType(App.AppType.TOOL);
+                newApp.setPlatform(App.Platform.valueOf(platform.toUpperCase()));
+                newApp.setIsFree(false);
+                newApp.setIsFeatured(false);
+                newApp.setDownloadCount(0L);
+                newApp.setRating(0.0);
+                newApp.setRatingCount(0L);
+                
+                appService.createApp(newApp);
+                logger.info("应用创建成功: appId={}", appId);
+                
+            } else {
+                // 应用存在，更新版本信息
+                App app = existingApp.get();
+                if (compareVersions(version, app.getCurrentVersion()) > 0) {
+                    logger.info("更新应用版本: appId={}, 从 {} 更新到 {}", appId, app.getCurrentVersion(), version);
+                    app.setCurrentVersion(version);
+                    app.setRecommendedVersion(version);
+                    appService.updateApp(app.getId(), app);
+                }
+            }
+            
+        } catch (Exception e) {
+            logger.error("自动创建应用失败: appId={}", appId, e);
+            // 不抛出异常，让上传流程继续
+        }
     }
     
     /**

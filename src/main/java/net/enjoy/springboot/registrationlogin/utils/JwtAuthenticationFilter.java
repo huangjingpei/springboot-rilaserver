@@ -41,6 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             path.startsWith("/api/admin/") ||
             path.startsWith("/api/apps/") ||  // 应用商城API
             path.startsWith("/api/v1/updates/") ||  // 升级系统API - 允许公开访问
+            path.equals("/api/v1/proxy-config/health") ||  // 代理客户端配置健康检查 - 允许公开访问
             path.startsWith("/v3/api-docs") ||
             path.startsWith("/swagger-ui") ||
             path.startsWith("/swagger-ui.html") ||
@@ -52,6 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             path.equals("/user-type-test.html") ||
             path.equals("/app-store.html") ||  // 应用商城页面
             path.equals("/app-store-test.html") ||  // 应用商城测试页面
+            path.equals("/proxy-config-test.html") ||  // 代理客户端配置测试页面
             path.equals("/test.html") ||
             path.equals("/stream-test.html") ||
             path.equals("/stream-notification-test.html") ||
