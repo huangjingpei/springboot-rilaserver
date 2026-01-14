@@ -40,9 +40,9 @@ public class SpringSessionSecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         // 明确指定允许的源，包括qrc:协议和生产环境地址
         configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:8080", 
-            "http://127.0.0.1:8080",
-            "http://192.168.3.4:8080",  // 你的测试地址
+//            "http://localhost:8080",
+//            "http://127.0.0.1:8080",
+//            "http://192.168.3.4:8080",  // 你的测试地址
             "http://125.122.157.97:8081",  // 生产环境地址
             "https://125.122.157.97:8081", // HTTPS版本
             "qrc:*",  // 允许所有qrc:协议的源
