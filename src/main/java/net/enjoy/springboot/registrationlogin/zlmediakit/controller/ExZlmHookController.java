@@ -23,6 +23,7 @@ import net.enjoy.springboot.registrationlogin.service.StreamEventService;
 import net.enjoy.springboot.registrationlogin.service.PlayAuthService;
 import net.enjoy.springboot.registrationlogin.dto.PlayAuthResult;
 import net.enjoy.springboot.registrationlogin.config.ZLMediaKitConfig;
+import net.enjoy.springboot.registrationlogin.service.SmartCdnService;
 
 @Tag(name = "zlm-hook", description = "zlm-hook")
 @Slf4j
@@ -38,6 +39,7 @@ public class ExZlmHookController {
     private final StreamEventService streamEventService;
     private final PlayAuthService playAuthService;
     private final ZLMediaKitConfig zlmediaKitConfig;
+    private final SmartCdnService smartCdnService;
 
     @Autowired
     public ExZlmHookController(
@@ -47,7 +49,8 @@ public class ExZlmHookController {
             StreamEventService streamEventService,
             @Qualifier("taskExecutor") AsyncTaskExecutor executor,
             PlayAuthService playAuthService,
-            ZLMediaKitConfig zlmediaKitConfig) {
+            ZLMediaKitConfig zlmediaKitConfig,
+            SmartCdnService smartCdnService) {
         this.zlmHookService = zlmHookService;
         this.streamService = streamService;
         this.streamInfoRepository = streamInfoRepository;
@@ -55,6 +58,7 @@ public class ExZlmHookController {
         this.executor = executor;
         this.playAuthService = playAuthService;
         this.zlmediaKitConfig = zlmediaKitConfig;
+        this.smartCdnService = smartCdnService;
     }
 
     /**
@@ -229,6 +233,7 @@ public class ExZlmHookController {
                         hlsUrl, 
                         flvUrl
                     );
+                    smartCdnService.ensureRootNode(streamId, rtmpUrl);
                     
                     log.info("推流开始通知已发送: userId={}, streamId={}", streamInfo.getUserId(), streamId);
                 } catch (Exception e) {
