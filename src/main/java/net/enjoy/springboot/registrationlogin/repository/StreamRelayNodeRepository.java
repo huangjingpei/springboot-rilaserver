@@ -1,12 +1,15 @@
 package net.enjoy.springboot.registrationlogin.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import net.enjoy.springboot.registrationlogin.entity.StreamRelayNode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.LockModeType;
 
@@ -30,5 +33,10 @@ public interface StreamRelayNodeRepository extends JpaRepository<StreamRelayNode
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select n from StreamRelayNode n where n.id = :id")
     Optional<StreamRelayNode> lockById(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("delete from StreamRelayNode n where n.updatedAt < :time and n.status = :status")
+    void deleteByUpdatedAtBeforeAndStatus(@Param("time") LocalDateTime time, @Param("status") StreamRelayNode.Status status);
 }
 

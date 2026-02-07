@@ -40,6 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             path.startsWith("/api/register") ||
             path.startsWith("/api/admin/") ||
             path.startsWith("/api/apps/") ||  // 应用商城API
+            path.startsWith("/api/smartcdn/client/register") || // SmartCDN客户端注册 - 允许未登录访问
             path.startsWith("/api/v1/updates/") ||  // 升级系统API - 允许公开访问
             path.equals("/api/v1/proxy-config/health") ||  // 代理客户端配置健康检查 - 允许公开访问
             path.startsWith("/v3/api-docs") ||

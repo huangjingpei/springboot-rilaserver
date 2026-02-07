@@ -5,6 +5,7 @@ import net.enjoy.springboot.registrationlogin.repository.StreamInfoRepository;
 import net.enjoy.springboot.registrationlogin.utils.JwtUtil;
 import net.enjoy.springboot.registrationlogin.zlmediakit.config.ExZlmProperties;
 import net.enjoy.springboot.registrationlogin.config.ZLMediaKitConfig;
+import net.enjoy.springboot.registrationlogin.config.SmartCdnConfig;
 import net.enjoy.springboot.registrationlogin.entity.User;
 import net.enjoy.springboot.registrationlogin.service.StreamService;
 import net.enjoy.springboot.registrationlogin.service.UserService;
@@ -22,6 +23,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -30,6 +34,9 @@ import org.springframework.http.HttpStatus;
 import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.concurrent.TimeUnit;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import net.enjoy.springboot.registrationlogin.constant.SmartCdnRedisKey;
 
 @Tag(name = "zlm-Service", description = "zlm-Service")
 @RequestMapping("/zlm")
@@ -41,6 +48,9 @@ public class ZlmRestController {
 
     @Autowired
     private ZLMediaKitConfig zlmediaKitConfig;
+
+    @Autowired
+    private SmartCdnConfig smartCdnConfig;
 
     @Autowired
     private StreamService streamService;
@@ -56,6 +66,9 @@ public class ZlmRestController {
 
     @Autowired
     private net.enjoy.springboot.registrationlogin.service.StreamLimitService streamLimitService;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     private static final Logger log = LoggerFactory.getLogger(ZlmRestController.class);
 
@@ -133,8 +146,15 @@ public class ZlmRestController {
      * @return 包含streamId和pushUrl的Map
      */
     @GetMapping("/getPushUrl")
-    public ResponseEntity<Map<String, Object>> getPushUrl(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> getPushUrl(HttpServletRequest request, @org.springframework.web.bind.annotation.RequestParam(required = false) String lanId) {
         try {
+            if (smartCdnConfig.isEnabled()) {
+                if (lanId == null || lanId.trim().isEmpty()) {
+                    Map<String, Object> errorResponse = createErrorResponse("SmartCDN已启用，必须提供lanId参数", "MISSING_LAN_ID");
+                    return ResponseEntity.badRequest().body(errorResponse);
+                }
+            }
+
             // 从JWT token中获取用户名
             String username = getUsernameFromToken(request);
             if (username == null) {
@@ -188,10 +208,25 @@ public class ZlmRestController {
                     user.getUserId(), streamLimitResult.getCurrentStreams(), streamLimitResult.getMaxStreams());
             
             // 生成推流地址
-            String streamId = "stream_" + user.getUserId() + "_" + System.currentTimeMillis();
+            // 修复: 使用 withoutPadding() 去除 Base64 结尾的 '='，避免 ZLMediaKit/MediaMTX 报错 "invalid path name"
+            String streamId = "stream_" + Base64.getUrlEncoder().withoutPadding().encodeToString(user.getUserId().getBytes(StandardCharsets.UTF_8)) + "_" + System.currentTimeMillis();
             
             // 使用配置的动态主机地址生成推流URL
             String pushUrl = zlmediaKitConfig.generatePushUrl("live", streamId);
+            
+            // 如果提供了 lanId，将其附加到推流 URL 参数中，以便在 on_publish 钩子中提取
+            if (lanId != null && !lanId.trim().isEmpty()) {
+                if (pushUrl.contains("?")) {
+                    pushUrl += "&lanId=" + URLEncoder.encode(lanId, StandardCharsets.UTF_8);
+                } else {
+                    pushUrl += "?lanId=" + URLEncoder.encode(lanId, StandardCharsets.UTF_8);
+                }
+                
+                // [Robustness Fix] 同时将 lanId 存入 Redis，防止推流过程中参数丢失
+                String mappingKey = SmartCdnRedisKey.TEMP_STREAM_LAN_MAPPING + streamId;
+                redisTemplate.opsForValue().set(mappingKey, lanId, SmartCdnRedisKey.TEMP_MAPPING_EXPIRE_SECONDS, TimeUnit.SECONDS);
+                log.info("Cached lanId mapping for streamId: {} -> {}", streamId, lanId);
+            }
             
             // 保存流信息
             StreamInfo streamInfo = new StreamInfo();

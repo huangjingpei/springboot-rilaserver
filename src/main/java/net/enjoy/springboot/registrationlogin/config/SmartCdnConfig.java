@@ -13,6 +13,8 @@ public class SmartCdnConfig {
 
     private int maxSubscribersPerNode = 3;
 
+    private String storageType = "mysql";
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -35,5 +37,13 @@ public class SmartCdnConfig {
 
     public void setMaxSubscribersPerNode(int maxSubscribersPerNode) {
         this.maxSubscribersPerNode = maxSubscribersPerNode;
+    }
+
+    public String getStorageType() {
+        return storageType;
+    }
+
+    public void setStorageType(String storageType) {
+        this.storageType = storageType;
     }
 }

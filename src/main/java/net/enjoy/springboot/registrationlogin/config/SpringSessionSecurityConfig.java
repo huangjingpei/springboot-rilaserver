@@ -71,6 +71,8 @@ public class SpringSessionSecurityConfig {
                 // 移除maximumSessions配置，使用自定义业务逻辑控制设备数
             )
             .authorizeHttpRequests(authz -> authz
+                // SmartCDN相关接口 - 优先匹配
+                .requestMatchers("/api/smartcdn/client/register/**").permitAll()
                 .requestMatchers(
                     "/v3/api-docs/**",
                     "/swagger-ui/**",

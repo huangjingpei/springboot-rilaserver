@@ -24,6 +24,9 @@ import net.enjoy.springboot.registrationlogin.service.PlayAuthService;
 import net.enjoy.springboot.registrationlogin.dto.PlayAuthResult;
 import net.enjoy.springboot.registrationlogin.config.ZLMediaKitConfig;
 import net.enjoy.springboot.registrationlogin.service.SmartCdnService;
+import net.enjoy.springboot.registrationlogin.constant.SmartCdnRedisKey;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.StringUtils;
 
 @Tag(name = "zlm-hook", description = "zlm-hook")
 @Slf4j
@@ -40,6 +43,7 @@ public class ExZlmHookController {
     private final PlayAuthService playAuthService;
     private final ZLMediaKitConfig zlmediaKitConfig;
     private final SmartCdnService smartCdnService;
+    private final StringRedisTemplate redisTemplate;
 
     @Autowired
     public ExZlmHookController(
@@ -50,7 +54,8 @@ public class ExZlmHookController {
             @Qualifier("taskExecutor") AsyncTaskExecutor executor,
             PlayAuthService playAuthService,
             ZLMediaKitConfig zlmediaKitConfig,
-            SmartCdnService smartCdnService) {
+            SmartCdnService smartCdnService,
+            StringRedisTemplate redisTemplate) {
         this.zlmHookService = zlmHookService;
         this.streamService = streamService;
         this.streamInfoRepository = streamInfoRepository;
@@ -59,6 +64,7 @@ public class ExZlmHookController {
         this.playAuthService = playAuthService;
         this.zlmediaKitConfig = zlmediaKitConfig;
         this.smartCdnService = smartCdnService;
+        this.redisTemplate = redisTemplate;
     }
 
     /**
@@ -198,6 +204,7 @@ public class ExZlmHookController {
     @PostMapping(value = "/on_publish", produces = "application/json;charset=UTF-8")
     public HookResultForOnPublish onPublish(@RequestBody OnPublishHookParam param) {
         String streamId = param.getStream();
+        log.info("on_publish Hook received: streamId={}, params={}, ip={}", streamId, param.getParams(), param.getIp());
         
         // 查找流信息
         Optional<StreamInfo> streamInfoOptional = streamInfoRepository.findByStreamId(streamId);
@@ -233,7 +240,23 @@ public class ExZlmHookController {
                         hlsUrl, 
                         flvUrl
                     );
-                    smartCdnService.ensureRootNode(streamId, rtmpUrl);
+                    String lanId = extractParam(param.getParams(), "lanId");
+                    
+                    // [Robustness Fix] 如果参数中没有 lanId，尝试从 Redis 临时映射中获取
+                    if (!StringUtils.hasText(lanId)) {
+                        String mappingKey = SmartCdnRedisKey.TEMP_STREAM_LAN_MAPPING + streamId;
+                        String cachedLanId = redisTemplate.opsForValue().get(mappingKey);
+                        if (StringUtils.hasText(cachedLanId)) {
+                            lanId = cachedLanId;
+                            log.info("从Redis临时映射中找回 lanId: streamId={}, lanId={}", streamId, lanId);
+                            // 找到后可以删除临时key，或者等待过期
+                            redisTemplate.delete(mappingKey);
+                        } else {
+                            log.warn("无法获取 lanId: 参数中不存在且Redis映射未找到. streamId={}", streamId);
+                        }
+                    }
+
+                    smartCdnService.ensureRootNode(streamId, rtmpUrl, lanId);
                     
                     log.info("推流开始通知已发送: userId={}, streamId={}", streamInfo.getUserId(), streamId);
                 } catch (Exception e) {

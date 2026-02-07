@@ -49,6 +49,12 @@ public class SmartCdnController {
             Map<String, Object> body = new HashMap<>();
             body.put("success", ok);
             return ResponseEntity.ok(body);
+        } catch (IllegalArgumentException e) {
+            log.warn("SmartCDN relay register invalid request: {}", e.getMessage());
+            Map<String, Object> body = new HashMap<>();
+            body.put("success", false);
+            body.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(body);
         } catch (Exception e) {
             log.error("SmartCDN relay register failed", e);
             return ResponseEntity.status(500).body("SmartCDN relay register failed");

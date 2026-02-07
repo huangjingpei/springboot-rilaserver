@@ -12,7 +12,7 @@ public interface SmartCdnService {
 
     SmartCdnPlayUrlResponse getBestPlayUrl(String streamId, String lanId, String exclude);
 
-    void ensureRootNode(String streamId, String rtmpUrl);
+    void ensureRootNode(String streamId, String rtmpUrl, String lanId);
 
     int deleteClient(String clientId);
 
