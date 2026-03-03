@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.dto;
+package com.graddu.rilaserver.dto;
 
-import net.enjoy.springboot.registrationlogin.entity.AppReview;
+import com.graddu.rilaserver.entity.AppReview;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

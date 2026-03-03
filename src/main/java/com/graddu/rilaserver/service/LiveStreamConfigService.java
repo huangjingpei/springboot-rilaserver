@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.LiveStreamConfigDto;
+import com.graddu.rilaserver.dto.LiveStreamConfigDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

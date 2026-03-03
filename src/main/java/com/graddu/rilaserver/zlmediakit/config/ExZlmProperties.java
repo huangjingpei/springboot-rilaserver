@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.zlmediakit.config;
+package com.graddu.rilaserver.zlmediakit.config;
 
 import io.github.lunasaw.zlm.config.ZlmNode;
 import io.github.lunasaw.zlm.enums.LoadBalancerEnums;

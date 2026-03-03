@@ -1,12 +1,12 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
-import net.enjoy.springboot.registrationlogin.dto.AppDto;
-import net.enjoy.springboot.registrationlogin.dto.UpdateCheckResponse;
-import net.enjoy.springboot.registrationlogin.dto.UpdatePackageDto;
-import net.enjoy.springboot.registrationlogin.entity.App;
-import net.enjoy.springboot.registrationlogin.entity.UpdatePackage;
-import net.enjoy.springboot.registrationlogin.service.AppService;
-import net.enjoy.springboot.registrationlogin.service.UpdateService;
+import com.graddu.rilaserver.dto.AppDto;
+import com.graddu.rilaserver.dto.UpdateCheckResponse;
+import com.graddu.rilaserver.dto.UpdatePackageDto;
+import com.graddu.rilaserver.entity.App;
+import com.graddu.rilaserver.entity.UpdatePackage;
+import com.graddu.rilaserver.service.AppService;
+import com.graddu.rilaserver.service.UpdateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

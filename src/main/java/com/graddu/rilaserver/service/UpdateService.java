@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.UpdateCheckResponse;
-import net.enjoy.springboot.registrationlogin.dto.UpdatePackageDto;
-import net.enjoy.springboot.registrationlogin.entity.UpdatePackage;
+import com.graddu.rilaserver.dto.UpdateCheckResponse;
+import com.graddu.rilaserver.dto.UpdatePackageDto;
+import com.graddu.rilaserver.entity.UpdatePackage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

@@ -30,7 +30,7 @@ SmartCDN 的目标是在传输 RTMP/HTTP(FV/HLS) 流时：
 
 ## 2. 数据建模：SmartCDN 流节点表
 
-现有的 [StreamInfo](file:///d:/spring-boot-user-registration-and-Login/src/main/java/net/enjoy/springboot/registrationlogin/entity/StreamInfo.java) 已经存储了一条逻辑流的信息（`streamId`、`pushUrl`、`playUrl`、`status` 等）。
+现有的 [StreamInfo](file:///d:/rilaserver/src/main/java/com/graddu/rilaserver/entity/StreamInfo.java) 已经存储了一条逻辑流的信息（`streamId`、`pushUrl`、`playUrl`、`status` 等）。
 
 SmartCDN 需要一个“拓扑表”来描述：**同一条逻辑流在不同节点（ZLMediaKit/SRS/mediamtx）上的拉流节点关系**。
 
@@ -79,7 +79,7 @@ SmartCDN 需要一个“拓扑表”来描述：**同一条逻辑流在不同节
 
 为保证兼容性，SmartCDN 必须可以一键关闭，不影响现有逻辑。
 
-在 [application.properties](file:///d:/spring-boot-user-registration-and-Login/src/main/resources/application.properties) 中增加配置：
+在 [application.properties](file:///d:/rilaserver/src/main/resources/application.properties) 中增加配置：
 
 ```properties
 smartcdn.enabled=true
@@ -102,10 +102,10 @@ smartcdn.max-subscribers-per-node=3
 
 已有关键类：
 
-- [StreamEventMessage](file:///d:/spring-boot-user-registration-and-Login/src/main/java/net/enjoy/springboot/registrationlogin/model/StreamEventMessage.java)：流事件消息模型，包含 `publish_started` 等事件；
-- [StreamInfo](file:///d:/spring-boot-user-registration-and-Login/src/main/java/net/enjoy/springboot/registrationlogin/entity/StreamInfo.java)：流信息实体；
-- [StreamServiceImpl](file:///d:/spring-boot-user-registration-and-Login/src/main/java/net/enjoy/springboot/registrationlogin/service/StreamServiceImpl.java)：生成推流 URL；
-- [ZLMediaKitConfig](file:///d:/spring-boot-user-registration-and-Login/src/main/java/net/enjoy/springboot/registrationlogin/config/ZLMediaKitConfig.java)：生成 ZLM 播放 URL。
+- [StreamEventMessage](file:///d:/rilaserver/src/main/java/com/graddu/rilaserver/model/StreamEventMessage.java)：流事件消息模型，包含 `publish_started` 等事件；
+- [StreamInfo](file:///d:/rilaserver/src/main/java/com/graddu/rilaserver/entity/StreamInfo.java)：流信息实体；
+- [StreamServiceImpl](file:///d:/rilaserver/src/main/java/com/graddu/rilaserver/service/StreamServiceImpl.java)：生成推流 URL；
+- [ZLMediaKitConfig](file:///d:/rilaserver/src/main/java/com/graddu/rilaserver/config/ZLMediaKitConfig.java)：生成 ZLM 播放 URL。
 
 SmartCDN 在此基础上做“旁路增强”。
 
@@ -320,7 +320,7 @@ ZLMediaKit 自身的 fan-out 限制也通过根节点的 `max_subscribers`/`curr
 
 ### 5.2 利用 StreamEventMessage 的 publish_started
 
-现有的 [StreamEventMessage.publishStarted](file:///d:/spring-boot-user-registration-and-Login/src/main/java/net/enjoy/springboot/registrationlogin/model/StreamEventMessage.java#L26) 已经带有：
+现有的 [StreamEventMessage.publishStarted](file:///d:/rilaserver/src/main/java/com/graddu/rilaserver/model/StreamEventMessage.java#L26) 已经带有：
 
 - `streamId`；
 - `userId`；

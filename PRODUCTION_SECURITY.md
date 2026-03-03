@@ -171,7 +171,7 @@ maxmemory-policy allkeys-lru
 ```properties
 # 日志配置
 logging.level.root=WARN
-logging.level.net.enjoy.springboot.registrationlogin=INFO
+logging.level.com.graddu.rilaserver=INFO
 logging.level.org.springframework.security=DEBUG
 logging.file.name=/var/log/app/application.log
 logging.pattern.file=%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n

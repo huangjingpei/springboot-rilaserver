@@ -1,15 +1,15 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
-import net.enjoy.springboot.registrationlogin.dto.LoginDto;
-import net.enjoy.springboot.registrationlogin.dto.UserDto;
-import net.enjoy.springboot.registrationlogin.entity.StreamInfo;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.repository.UserRepository;
-import net.enjoy.springboot.registrationlogin.service.SecurityService;
-import net.enjoy.springboot.registrationlogin.service.SpringSessionService;
-import net.enjoy.springboot.registrationlogin.service.StreamService;
-import net.enjoy.springboot.registrationlogin.service.UserService;
-import net.enjoy.springboot.registrationlogin.utils.JwtUtil;
+import com.graddu.rilaserver.dto.LoginDto;
+import com.graddu.rilaserver.dto.UserDto;
+import com.graddu.rilaserver.entity.StreamInfo;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.repository.UserRepository;
+import com.graddu.rilaserver.service.SecurityService;
+import com.graddu.rilaserver.service.SpringSessionService;
+import com.graddu.rilaserver.service.StreamService;
+import com.graddu.rilaserver.service.UserService;
+import com.graddu.rilaserver.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;

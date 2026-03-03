@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.utils;
+package com.graddu.rilaserver.utils;
 
-import net.enjoy.springboot.registrationlogin.entity.UserType;
+import com.graddu.rilaserver.entity.UserType;
 
 /**
  * 用户类型工具类

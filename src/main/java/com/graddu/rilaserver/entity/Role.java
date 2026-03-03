@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.entity;
+package com.graddu.rilaserver.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

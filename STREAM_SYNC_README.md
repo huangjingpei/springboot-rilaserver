@@ -181,7 +181,7 @@ A: 增加 `stream.sync.sync-delay-ms` 延迟时间
 
 启用调试日志：
 ```properties
-logging.level.net.enjoy.springboot.registrationlogin.service.StreamStatusSyncServiceImpl=DEBUG
+logging.level.com.graddu.rilaserver.service.StreamStatusSyncServiceImpl=DEBUG
 ```
 
 关键日志信息：

@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.model;
+package com.graddu.rilaserver.model;
 
 import lombok.Data;
 import lombok.AllArgsConstructor;

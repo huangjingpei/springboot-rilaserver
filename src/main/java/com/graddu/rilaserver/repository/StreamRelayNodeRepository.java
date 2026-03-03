@@ -1,9 +1,9 @@
-package net.enjoy.springboot.registrationlogin.repository;
+package com.graddu.rilaserver.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import net.enjoy.springboot.registrationlogin.entity.StreamRelayNode;
+import com.graddu.rilaserver.entity.StreamRelayNode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -21,7 +21,7 @@ public interface StreamRelayNodeRepository extends JpaRepository<StreamRelayNode
 
     Optional<StreamRelayNode> findByStreamIdAndPullUrl(String streamId, String pullUrl);
 
-    @Query("select n from StreamRelayNode n where n.streamId = :streamId and n.lanId = :lanId and n.platform = net.enjoy.springboot.registrationlogin.entity.StreamRelayNode$Platform.MEDIAMTX and n.status = net.enjoy.springboot.registrationlogin.entity.StreamRelayNode$Status.ACTIVE order by n.depth asc, n.currentSubscribers asc")
+    @Query("select n from StreamRelayNode n where n.streamId = :streamId and n.lanId = :lanId and n.platform = com.graddu.rilaserver.entity.StreamRelayNode$Platform.MEDIAMTX and n.status = com.graddu.rilaserver.entity.StreamRelayNode$Status.ACTIVE order by n.depth asc, n.currentSubscribers asc")
     List<StreamRelayNode> findActiveMediamtxNodesByStreamAndLanOrdered(@Param("streamId") String streamId, @Param("lanId") String lanId);
 
     List<StreamRelayNode> findByStreamIdAndLanIdAndPlatformAndDepth(String streamId, String lanId, StreamRelayNode.Platform platform, Integer depth);

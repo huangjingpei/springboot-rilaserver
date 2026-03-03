@@ -1,4 +1,4 @@
-# spring-boot-user-registration-and-Login
+# rilaserver
 
 What we have to build?
 

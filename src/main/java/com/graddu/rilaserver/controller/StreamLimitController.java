@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
-import net.enjoy.springboot.registrationlogin.service.StreamLimitService;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.service.UserService;
+import com.graddu.rilaserver.service.StreamLimitService;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

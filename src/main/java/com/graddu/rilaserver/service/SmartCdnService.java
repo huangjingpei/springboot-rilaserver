@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.SmartCdnClientRegisterRequest;
-import net.enjoy.springboot.registrationlogin.dto.SmartCdnPlayUrlResponse;
-import net.enjoy.springboot.registrationlogin.dto.SmartCdnRelayRegisterRequest;
+import com.graddu.rilaserver.dto.SmartCdnClientRegisterRequest;
+import com.graddu.rilaserver.dto.SmartCdnPlayUrlResponse;
+import com.graddu.rilaserver.dto.SmartCdnRelayRegisterRequest;
 
 public interface SmartCdnService {
 

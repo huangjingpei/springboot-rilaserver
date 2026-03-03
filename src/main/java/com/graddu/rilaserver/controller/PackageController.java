@@ -1,7 +1,7 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
-import net.enjoy.springboot.registrationlogin.dto.PackageDto;
-import net.enjoy.springboot.registrationlogin.service.UserService;
+import com.graddu.rilaserver.dto.PackageDto;
+import com.graddu.rilaserver.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

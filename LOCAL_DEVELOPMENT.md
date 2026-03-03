@@ -21,7 +21,7 @@
 ### 1. 克隆项目
 ```bash
 git clone <your-repository-url>
-cd spring-boot-user-registration-and-Login
+cd rilaserver
 ```
 
 ### 2. 配置数据库
@@ -63,11 +63,11 @@ spring.redis.port=6379
 mvn spring-boot:run
 
 # 方式2：使用IDE
-# 直接运行 RegistrationLoginApplication 类
+# 直接运行 RilaServerApplication 类
 
 # 方式3：打包后运行
 mvn clean package
-java -jar target/registration-login-0.0.1-SNAPSHOT.jar
+java -jar target/rilaserver-0.0.1-SNAPSHOT.jar
 ```
 
 ## 本地开发特性
@@ -189,7 +189,7 @@ spring.jpa.open-in-view=false
 ### 2. 内存优化
 ```bash
 # 设置JVM参数
-java -Xms512m -Xmx1024m -jar target/registration-login-0.0.1-SNAPSHOT.jar
+java -Xms512m -Xmx1024m -jar target/rilaserver-0.0.1-SNAPSHOT.jar
 ```
 
 ## 下一步

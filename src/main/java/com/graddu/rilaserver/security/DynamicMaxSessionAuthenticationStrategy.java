@@ -1,10 +1,10 @@
-package net.enjoy.springboot.registrationlogin.security;
+package com.graddu.rilaserver.security;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.repository.UserRepository;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.session.SessionRegistry;

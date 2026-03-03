@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.model.StreamEventMessage;
+import com.graddu.rilaserver.model.StreamEventMessage;
 
 public interface StreamEventService {
     /**

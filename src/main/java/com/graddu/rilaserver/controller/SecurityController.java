@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
-import net.enjoy.springboot.registrationlogin.entity.AuditLog;
-import net.enjoy.springboot.registrationlogin.entity.UserDevice;
-import net.enjoy.springboot.registrationlogin.service.SecurityService;
+import com.graddu.rilaserver.entity.AuditLog;
+import com.graddu.rilaserver.entity.UserDevice;
+import com.graddu.rilaserver.service.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

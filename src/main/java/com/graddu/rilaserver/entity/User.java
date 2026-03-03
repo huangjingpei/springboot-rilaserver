@@ -1,11 +1,11 @@
-package net.enjoy.springboot.registrationlogin.entity;
+package com.graddu.rilaserver.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import net.enjoy.springboot.registrationlogin.entity.Package;
+import com.graddu.rilaserver.entity.Package;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

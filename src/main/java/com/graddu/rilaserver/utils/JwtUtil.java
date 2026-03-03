@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.utils;
+package com.graddu.rilaserver.utils;
 
 
 import io.jsonwebtoken.*;

@@ -1,10 +1,10 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.enjoy.springboot.registrationlogin.dto.ProxyClientConfigDto;
-import net.enjoy.springboot.registrationlogin.entity.ProxyClientConfig;
-import net.enjoy.springboot.registrationlogin.repository.ProxyClientConfigRepository;
+import com.graddu.rilaserver.dto.ProxyClientConfigDto;
+import com.graddu.rilaserver.entity.ProxyClientConfig;
+import com.graddu.rilaserver.repository.ProxyClientConfigRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

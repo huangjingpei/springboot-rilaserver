@@ -1,13 +1,13 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.enjoy.springboot.registrationlogin.dto.LiveStreamConfigDto;
-import net.enjoy.springboot.registrationlogin.dto.StreamFetchResult;
-import net.enjoy.springboot.registrationlogin.entity.LiveStreamConfig;
-import net.enjoy.springboot.registrationlogin.entity.LiveStreamStatusLog;
-import net.enjoy.springboot.registrationlogin.repository.LiveStreamConfigRepository;
-import net.enjoy.springboot.registrationlogin.repository.LiveStreamStatusLogRepository;
+import com.graddu.rilaserver.dto.LiveStreamConfigDto;
+import com.graddu.rilaserver.dto.StreamFetchResult;
+import com.graddu.rilaserver.entity.LiveStreamConfig;
+import com.graddu.rilaserver.entity.LiveStreamStatusLog;
+import com.graddu.rilaserver.repository.LiveStreamConfigRepository;
+import com.graddu.rilaserver.repository.LiveStreamStatusLogRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;

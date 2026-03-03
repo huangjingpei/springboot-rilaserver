@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.dto;
+package com.graddu.rilaserver.dto;
 
-import net.enjoy.springboot.registrationlogin.entity.App;
+import com.graddu.rilaserver.entity.App;
 import java.time.Instant;
 import java.util.List;
 

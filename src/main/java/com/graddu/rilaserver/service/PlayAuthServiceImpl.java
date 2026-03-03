@@ -1,13 +1,13 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.PlayAuthResult;
-import net.enjoy.springboot.registrationlogin.entity.StreamInfo;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.repository.StreamInfoRepository;
-import net.enjoy.springboot.registrationlogin.repository.UserRepository;
-import net.enjoy.springboot.registrationlogin.utils.JwtUtil;
-import net.enjoy.springboot.registrationlogin.entity.UserStatus;
-import net.enjoy.springboot.registrationlogin.config.ZLMediaKitConfig;
+import com.graddu.rilaserver.dto.PlayAuthResult;
+import com.graddu.rilaserver.entity.StreamInfo;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.repository.StreamInfoRepository;
+import com.graddu.rilaserver.repository.UserRepository;
+import com.graddu.rilaserver.utils.JwtUtil;
+import com.graddu.rilaserver.entity.UserStatus;
+import com.graddu.rilaserver.config.ZLMediaKitConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

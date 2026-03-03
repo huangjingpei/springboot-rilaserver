@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.repository;
+package com.graddu.rilaserver.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import net.enjoy.springboot.registrationlogin.entity.SmartCdnClient;
+import com.graddu.rilaserver.entity.SmartCdnClient;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

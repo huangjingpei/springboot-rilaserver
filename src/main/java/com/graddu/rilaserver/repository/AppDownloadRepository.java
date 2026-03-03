@@ -1,7 +1,7 @@
-package net.enjoy.springboot.registrationlogin.repository;
+package com.graddu.rilaserver.repository;
 
-import net.enjoy.springboot.registrationlogin.entity.AppDownload;
-import net.enjoy.springboot.registrationlogin.entity.App;
+import com.graddu.rilaserver.entity.AppDownload;
+import com.graddu.rilaserver.entity.App;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.dto;
+package com.graddu.rilaserver.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

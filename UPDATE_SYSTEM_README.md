@@ -338,7 +338,7 @@ mvn spring-boot:run
 
 # 或打包后启动
 mvn clean package
-java -jar target/registration-login-0.0.1-SNAPSHOT.jar
+java -jar target/rilaserver-0.0.1-SNAPSHOT.jar
 ```
 
 ### 4. Nginx配置

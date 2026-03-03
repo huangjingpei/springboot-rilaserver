@@ -1,14 +1,14 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.PackageDto;
-import net.enjoy.springboot.registrationlogin.dto.UserDto;
-import net.enjoy.springboot.registrationlogin.entity.Role;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.entity.Package;
-import net.enjoy.springboot.registrationlogin.entity.UserStatus;
-import net.enjoy.springboot.registrationlogin.repository.RoleRepository;
-import net.enjoy.springboot.registrationlogin.repository.UserRepository;
-import net.enjoy.springboot.registrationlogin.repository.PackageRepository;
+import com.graddu.rilaserver.dto.PackageDto;
+import com.graddu.rilaserver.dto.UserDto;
+import com.graddu.rilaserver.entity.Role;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.entity.Package;
+import com.graddu.rilaserver.entity.UserStatus;
+import com.graddu.rilaserver.repository.RoleRepository;
+import com.graddu.rilaserver.repository.UserRepository;
+import com.graddu.rilaserver.repository.PackageRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
         user.setType(userDto.getType() != null ? userDto.getType() : "register");
         user.setMaxDevices(userDto.getMaxDevices() != null ? userDto.getMaxDevices() : 1);
         user.setMaxStreams(userDto.getMaxStreams() != null ? userDto.getMaxStreams() : 
-                net.enjoy.springboot.registrationlogin.utils.UserTypeUtils.getDefaultMaxStreams(user.getType()));
+                com.graddu.rilaserver.utils.UserTypeUtils.getDefaultMaxStreams(user.getType()));
         
         // 设置用户状态和安全相关字段
         user.setStatus(UserStatus.ACTIVE);

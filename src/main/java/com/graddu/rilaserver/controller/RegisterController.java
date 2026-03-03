@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
-import net.enjoy.springboot.registrationlogin.dto.UserDto;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.service.UserService;
+import com.graddu.rilaserver.dto.UserDto;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -52,7 +52,7 @@ public class RegisterController {
                 userDto.setMaxDevices(1);
             }
             if (userDto.getMaxStreams() == null) {
-                userDto.setMaxStreams(net.enjoy.springboot.registrationlogin.utils.UserTypeUtils.getDefaultMaxStreams(userDto.getType()));
+                userDto.setMaxStreams(com.graddu.rilaserver.utils.UserTypeUtils.getDefaultMaxStreams(userDto.getType()));
             }
             
             userService.saveUser(userDto);
@@ -111,7 +111,7 @@ public class RegisterController {
                 userDto.setMaxDevices(100); // 企业用户默认100个设备
             }
             if (userDto.getMaxStreams() == null) {
-                userDto.setMaxStreams(net.enjoy.springboot.registrationlogin.utils.UserTypeUtils.getDefaultMaxStreams("enterprise"));
+                userDto.setMaxStreams(com.graddu.rilaserver.utils.UserTypeUtils.getDefaultMaxStreams("enterprise"));
             }
             
             userService.saveUser(userDto);

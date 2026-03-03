@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.security;
+package com.graddu.rilaserver.security;
 
-import net.enjoy.springboot.registrationlogin.entity.Role;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.repository.UserRepository;
+import com.graddu.rilaserver.entity.Role;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.repository.UserRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

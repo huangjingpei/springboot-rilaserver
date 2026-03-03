@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.entity.User;
+import com.graddu.rilaserver.entity.User;
 
 /**
  * 推流限制服务接口

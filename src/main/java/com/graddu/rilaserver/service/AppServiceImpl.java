@@ -1,9 +1,9 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.AppDto;
-import net.enjoy.springboot.registrationlogin.dto.AppSearchRequest;
-import net.enjoy.springboot.registrationlogin.entity.App;
-import net.enjoy.springboot.registrationlogin.repository.AppRepository;
+import com.graddu.rilaserver.dto.AppDto;
+import com.graddu.rilaserver.dto.AppSearchRequest;
+import com.graddu.rilaserver.entity.App;
+import com.graddu.rilaserver.repository.AppRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

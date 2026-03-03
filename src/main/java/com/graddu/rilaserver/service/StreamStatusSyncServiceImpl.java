@@ -1,12 +1,12 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.enjoy.springboot.registrationlogin.entity.StreamInfo;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.model.StreamEventMessage;
-import net.enjoy.springboot.registrationlogin.repository.StreamInfoRepository;
-import net.enjoy.springboot.registrationlogin.repository.UserRepository;
-import net.enjoy.springboot.registrationlogin.config.StreamSyncConfig;
+import com.graddu.rilaserver.entity.StreamInfo;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.model.StreamEventMessage;
+import com.graddu.rilaserver.repository.StreamInfoRepository;
+import com.graddu.rilaserver.repository.UserRepository;
+import com.graddu.rilaserver.config.StreamSyncConfig;
 import org.springframework.scheduling.annotation.Async;
 
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import net.enjoy.springboot.registrationlogin.config.ZLMediaKitConfig;
+import com.graddu.rilaserver.config.ZLMediaKitConfig;
 
 /**
  * 流状态同步服务实现
@@ -287,6 +287,6 @@ public class StreamStatusSyncServiceImpl implements StreamStatusSyncService {
         if (dateTime == null) {
             return null;
         }
-        return net.enjoy.springboot.registrationlogin.config.TimeZoneConfig.toTimestamp(dateTime);
+        return com.graddu.rilaserver.config.TimeZoneConfig.toTimestamp(dateTime);
     }
 } 

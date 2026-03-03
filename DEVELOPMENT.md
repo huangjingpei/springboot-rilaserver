@@ -45,7 +45,7 @@
 
 ```
 .
-├── src/main/java/net/enjoy/springboot/registrationlogin/
+├── src/main/java/com/graddu/rilaserver/
 │   ├── config/         # Spring Boot 配置
 │   ├── controller/     # RESTful API 控制器
 │   ├── dto/            # 数据传输对象

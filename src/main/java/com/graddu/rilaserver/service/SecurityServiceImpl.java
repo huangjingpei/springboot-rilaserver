@@ -1,15 +1,15 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.config.SecurityConfig;
-import net.enjoy.springboot.registrationlogin.entity.AuditLog;
-import net.enjoy.springboot.registrationlogin.entity.LoginAttempt;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.entity.UserDevice;
-import net.enjoy.springboot.registrationlogin.entity.UserStatus;
-import net.enjoy.springboot.registrationlogin.repository.AuditLogRepository;
-import net.enjoy.springboot.registrationlogin.repository.LoginAttemptRepository;
-import net.enjoy.springboot.registrationlogin.repository.UserDeviceRepository;
-import net.enjoy.springboot.registrationlogin.repository.UserRepository;
+import com.graddu.rilaserver.config.SecurityConfig;
+import com.graddu.rilaserver.entity.AuditLog;
+import com.graddu.rilaserver.entity.LoginAttempt;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.entity.UserDevice;
+import com.graddu.rilaserver.entity.UserStatus;
+import com.graddu.rilaserver.repository.AuditLogRepository;
+import com.graddu.rilaserver.repository.LoginAttemptRepository;
+import com.graddu.rilaserver.repository.UserDeviceRepository;
+import com.graddu.rilaserver.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;

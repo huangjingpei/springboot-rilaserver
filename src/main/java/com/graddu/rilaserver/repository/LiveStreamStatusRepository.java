@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.repository;
+package com.graddu.rilaserver.repository;
 
-import net.enjoy.springboot.registrationlogin.entity.LiveStreamStatus;
+import com.graddu.rilaserver.entity.LiveStreamStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

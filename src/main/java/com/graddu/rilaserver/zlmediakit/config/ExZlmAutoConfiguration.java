@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.zlmediakit.config;
+package com.graddu.rilaserver.zlmediakit.config;
 
 import io.github.lunasaw.zlm.hook.service.ZlmHookService;
 import io.github.lunasaw.zlm.hook.service.impl.DefaultZlmHookServiceImpl;

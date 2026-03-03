@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.UserPackageDto;
-import net.enjoy.springboot.registrationlogin.entity.UserPackage;
-import net.enjoy.springboot.registrationlogin.entity.Package;
+import com.graddu.rilaserver.dto.UserPackageDto;
+import com.graddu.rilaserver.entity.UserPackage;
+import com.graddu.rilaserver.entity.Package;
 import java.util.List;
 import java.util.Optional;
 

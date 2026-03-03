@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.config;
+package com.graddu.rilaserver.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,10 +1,10 @@
-package net.enjoy.springboot.registrationlogin.zlmediakit.service;
+package com.graddu.rilaserver.zlmediakit.service;
 
 import io.github.lunasaw.zlm.entity.ServerNodeConfig;
 import io.github.lunasaw.zlm.hook.param.*;
 import io.github.lunasaw.zlm.hook.service.AbstractZlmHookService;
-import net.enjoy.springboot.registrationlogin.entity.StreamInfo;
-import net.enjoy.springboot.registrationlogin.repository.StreamInfoRepository;
+import com.graddu.rilaserver.entity.StreamInfo;
+import com.graddu.rilaserver.repository.StreamInfoRepository;
 
 import lombok.extern.slf4j.Slf4j;
 

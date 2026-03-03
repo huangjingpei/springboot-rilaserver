@@ -1,7 +1,7 @@
-package net.enjoy.springboot.registrationlogin.dto;
+package com.graddu.rilaserver.dto;
 
-import net.enjoy.springboot.registrationlogin.entity.App;
-import net.enjoy.springboot.registrationlogin.entity.AppDownload;
+import com.graddu.rilaserver.entity.App;
+import com.graddu.rilaserver.entity.AppDownload;
 import java.time.LocalDateTime;
 
 public class AppDownloadDto {

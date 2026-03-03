@@ -1,9 +1,9 @@
-package net.enjoy.springboot.registrationlogin.dto;
+package com.graddu.rilaserver.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
-import net.enjoy.springboot.registrationlogin.entity.ProxyClientConfig;
+import com.graddu.rilaserver.entity.ProxyClientConfig;
 
 @Data
 public class ProxyClientConfigDto {

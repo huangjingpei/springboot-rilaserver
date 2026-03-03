@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.entity;
+package com.graddu.rilaserver.entity;
 
 /**
  * 用户类型枚举

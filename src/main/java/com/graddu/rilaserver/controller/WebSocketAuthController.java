@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
 import lombok.RequiredArgsConstructor;
-import net.enjoy.springboot.registrationlogin.service.RoomService;
-import net.enjoy.springboot.registrationlogin.utils.JwtUtil;
+import com.graddu.rilaserver.service.RoomService;
+import com.graddu.rilaserver.utils.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;

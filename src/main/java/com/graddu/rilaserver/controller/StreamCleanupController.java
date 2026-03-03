@@ -1,11 +1,11 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import net.enjoy.springboot.registrationlogin.entity.StreamInfo;
-import net.enjoy.springboot.registrationlogin.service.StreamCleanupScheduler;
-import net.enjoy.springboot.registrationlogin.service.StreamLimitService;
-import net.enjoy.springboot.registrationlogin.service.StreamStatusValidationService;
+import com.graddu.rilaserver.entity.StreamInfo;
+import com.graddu.rilaserver.service.StreamCleanupScheduler;
+import com.graddu.rilaserver.service.StreamLimitService;
+import com.graddu.rilaserver.service.StreamStatusValidationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;

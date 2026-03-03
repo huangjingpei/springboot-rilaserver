@@ -1,16 +1,16 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.entity.UserSession;
-import net.enjoy.springboot.registrationlogin.entity.UserDevice;
-import net.enjoy.springboot.registrationlogin.entity.UserStatus;
-import net.enjoy.springboot.registrationlogin.repository.UserRepository;
-import net.enjoy.springboot.registrationlogin.repository.UserSessionRepository;
-import net.enjoy.springboot.registrationlogin.service.SecurityService;
-import net.enjoy.springboot.registrationlogin.service.SpringSessionService;
-import net.enjoy.springboot.registrationlogin.utils.JwtUtil;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.entity.UserSession;
+import com.graddu.rilaserver.entity.UserDevice;
+import com.graddu.rilaserver.entity.UserStatus;
+import com.graddu.rilaserver.repository.UserRepository;
+import com.graddu.rilaserver.repository.UserSessionRepository;
+import com.graddu.rilaserver.service.SecurityService;
+import com.graddu.rilaserver.service.SpringSessionService;
+import com.graddu.rilaserver.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,128 +41,137 @@ public class LoginController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req, HttpServletRequest request) {
-        String ipAddress = getClientIpAddress(request);
-        String userAgent = request.getHeader("User-Agent");
-        
-        // 1. 检查用户状态（早期检查）
-        if (!securityService.checkUserStatus(req.getUserId())) {
+        try {
+            String ipAddress = getClientIpAddress(request);
+            String userAgent = request.getHeader("User-Agent");
+            
+            // 1. 检查用户状态（早期检查）
+            if (!securityService.checkUserStatus(req.getUserId())) {
+                User user = userRepository.findByUserId(req.getUserId());
+                if (user == null) {
+                    securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "用户不存在");
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("success", false);
+                    errorResponse.put("message", "用户不存在");
+                    errorResponse.put("code", "USER_NOT_FOUND");
+                    return ResponseEntity.badRequest().body(errorResponse);
+                } else {
+                    securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "用户状态异常: " + user.getStatus());
+                    Map<String, Object> errorResponse = new HashMap<>();
+                    errorResponse.put("success", false);
+                    errorResponse.put("message", "用户账户状态异常: " + user.getStatus().getDescription());
+                    errorResponse.put("code", "USER_STATUS_ERROR");
+                    return ResponseEntity.badRequest().body(errorResponse);
+                }
+            }
+            
+            // 2. 执行安全检查（锁定、IP阻止等）
+            if (!securityService.performSecurityChecks(req.getUserId(), ipAddress)) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                if (securityService.isAccountLocked(req.getUserId())) {
+                    errorResponse.put("message", "账户已被锁定，请稍后再试");
+                    errorResponse.put("code", "ACCOUNT_LOCKED");
+                    return ResponseEntity.badRequest().body(errorResponse);
+                }
+                if (securityService.isIpBlocked(ipAddress)) {
+                    errorResponse.put("message", "IP地址已被阻止，请稍后再试");
+                    errorResponse.put("code", "IP_BLOCKED");
+                    return ResponseEntity.badRequest().body(errorResponse);
+                }
+                securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "安全检查失败");
+                errorResponse.put("message", "安全检查失败");
+                errorResponse.put("code", "SECURITY_CHECK_FAILED");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            
+            // 3. 获取用户信息（此时用户已确认存在且状态正常）
             User user = userRepository.findByUserId(req.getUserId());
-            if (user == null) {
-                securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "用户不存在");
+            
+            // 4. 验证密码
+            if (user.getPassword() != null && !passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+                securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "密码错误");
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("success", false);
-                errorResponse.put("message", "用户不存在");
-                errorResponse.put("code", "USER_NOT_FOUND");
+                errorResponse.put("message", "密码错误");
+                errorResponse.put("code", "INVALID_PASSWORD");
                 return ResponseEntity.badRequest().body(errorResponse);
-            } else {
-                securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "用户状态异常: " + user.getStatus());
+            }
+            
+            // 5. 验证用户类型（如果指定了type）
+            if (req.getType() != null && !req.getType().equals(user.getType())) {
+                securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "用户类型不匹配");
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("success", false);
-                errorResponse.put("message", "用户账户状态异常: " + user.getStatus().getDescription());
-                errorResponse.put("code", "USER_STATUS_ERROR");
+                errorResponse.put("message", "用户类型不匹配");
+                errorResponse.put("code", "USER_TYPE_MISMATCH");
                 return ResponseEntity.badRequest().body(errorResponse);
             }
-        }
-        
-        // 2. 执行安全检查（锁定、IP阻止等）
-        if (!securityService.performSecurityChecks(req.getUserId(), ipAddress)) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            if (securityService.isAccountLocked(req.getUserId())) {
-                errorResponse.put("message", "账户已被锁定，请稍后再试");
-                errorResponse.put("code", "ACCOUNT_LOCKED");
+            
+            // 6. 检查设备数限制（使用Spring Session）
+            String deviceId = req.getDeviceId() != null ? req.getDeviceId() : UUID.randomUUID().toString();
+            int currentSessions = springSessionService.getActiveSessionCount(user.getUserId());
+            if (currentSessions >= user.getMaxDevices()) {
+                securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "设备数超限");
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("message", "已达最大在线设备数限制：" + user.getMaxDevices() + "台。请先在其他设备上登出");
+                errorResponse.put("code", "DEVICE_LIMIT_EXCEEDED");
+                errorResponse.put("maxDevices", user.getMaxDevices());
+                errorResponse.put("currentDevices", currentSessions);
                 return ResponseEntity.badRequest().body(errorResponse);
             }
-            if (securityService.isIpBlocked(ipAddress)) {
-                errorResponse.put("message", "IP地址已被阻止，请稍后再试");
-                errorResponse.put("code", "IP_BLOCKED");
-                return ResponseEntity.badRequest().body(errorResponse);
-            }
-            securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "安全检查失败");
-            errorResponse.put("message", "安全检查失败");
-            errorResponse.put("code", "SECURITY_CHECK_FAILED");
-            return ResponseEntity.badRequest().body(errorResponse);
-        }
-        
-        // 3. 获取用户信息（此时用户已确认存在且状态正常）
-        User user = userRepository.findByUserId(req.getUserId());
-        
-        // 4. 验证密码
-        if (user.getPassword() != null && !passwordEncoder.matches(req.getPassword(), user.getPassword())) {
-            securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "密码错误");
+            
+            // 7. 设备管理
+            String deviceName = req.getDeviceName() != null ? req.getDeviceName() : "未知设备";
+            String deviceType = req.getDeviceType() != null ? req.getDeviceType() : "web";
+            
+            // 注册设备
+            UserDevice device = securityService.registerDevice(user.getUserId(), deviceId, deviceName, deviceType, ipAddress, userAgent);
+            
+            // 8. 处理会话（Spring Session会自动管理）
+            // 不再需要手动管理UserSession表
+            
+            // 9. 更新用户最后登录时间
+            user.setLastLoginAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            // 10. 重置登录失败次数
+            securityService.resetFailedAttempts(user.getUserId());
+
+            // 11. 记录成功登录
+            securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, true, null);
+
+            // 12. 生成JWT Token
+            String token = jwtUtil.generateToken(user.getUserId() + "|" + user.getType());
+            
+            // 13. 返回登录成功信息
+            Map<String, Object> successResponse = new HashMap<>();
+            successResponse.put("success", true);
+            successResponse.put("message", "登录成功");
+            successResponse.put("token", token);
+            successResponse.put("deviceId", deviceId);
+            successResponse.put("userId", user.getUserId());
+            successResponse.put("userName", user.getName());
+            successResponse.put("userType", user.getType());
+            successResponse.put("maxDevices", user.getMaxDevices());
+            successResponse.put("currentDevices", springSessionService.getActiveSessionCount(user.getUserId()));
+            successResponse.put("deviceName", deviceName);
+            successResponse.put("loginTime", LocalDateTime.now());
+            
+            // 14. 记录审计日志
+            securityService.logAction(user.getUserId(), "USER_LOGIN", "LOGIN", ipAddress, userAgent, 
+                    "用户登录成功，设备: " + deviceName, "SUCCESS");
+            
+            return ResponseEntity.ok().body(successResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "密码错误");
-            errorResponse.put("code", "INVALID_PASSWORD");
-            return ResponseEntity.badRequest().body(errorResponse);
+            errorResponse.put("message", "系统内部错误: " + e.getMessage());
+            errorResponse.put("code", "INTERNAL_SERVER_ERROR");
+            return ResponseEntity.status(500).body(errorResponse);
         }
-        
-        // 5. 验证用户类型（如果指定了type）
-        if (req.getType() != null && !req.getType().equals(user.getType())) {
-            securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "用户类型不匹配");
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "用户类型不匹配");
-            errorResponse.put("code", "USER_TYPE_MISMATCH");
-            return ResponseEntity.badRequest().body(errorResponse);
-        }
-        
-        // 6. 检查设备数限制（使用Spring Session）
-        String deviceId = req.getDeviceId() != null ? req.getDeviceId() : UUID.randomUUID().toString();
-        int currentSessions = springSessionService.getActiveSessionCount(user.getUserId());
-        if (currentSessions >= user.getMaxDevices()) {
-            securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, false, "设备数超限");
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "已达最大在线设备数限制：" + user.getMaxDevices() + "台。请先在其他设备上登出");
-            errorResponse.put("code", "DEVICE_LIMIT_EXCEEDED");
-            errorResponse.put("maxDevices", user.getMaxDevices());
-            errorResponse.put("currentDevices", currentSessions);
-            return ResponseEntity.badRequest().body(errorResponse);
-        }
-        
-        // 7. 设备管理
-        String deviceName = req.getDeviceName() != null ? req.getDeviceName() : "未知设备";
-        String deviceType = req.getDeviceType() != null ? req.getDeviceType() : "web";
-        
-        // 注册设备
-        UserDevice device = securityService.registerDevice(user.getUserId(), deviceId, deviceName, deviceType, ipAddress, userAgent);
-        
-        // 8. 处理会话（Spring Session会自动管理）
-        // 不再需要手动管理UserSession表
-        
-        // 9. 更新用户最后登录时间
-        user.setLastLoginAt(LocalDateTime.now());
-        userRepository.save(user);
-
-        // 10. 重置登录失败次数
-        securityService.resetFailedAttempts(user.getUserId());
-
-        // 11. 记录成功登录
-        securityService.recordLoginAttempt(req.getUserId(), ipAddress, userAgent, true, null);
-
-        // 12. 生成JWT Token
-        String token = jwtUtil.generateToken(user.getUserId() + "|" + user.getType());
-        
-        // 13. 返回登录成功信息
-        Map<String, Object> successResponse = new HashMap<>();
-        successResponse.put("success", true);
-        successResponse.put("message", "登录成功");
-        successResponse.put("token", token);
-        successResponse.put("deviceId", deviceId);
-        successResponse.put("userId", user.getUserId());
-        successResponse.put("userName", user.getName());
-        successResponse.put("userType", user.getType());
-        successResponse.put("maxDevices", user.getMaxDevices());
-        successResponse.put("currentDevices", springSessionService.getActiveSessionCount(user.getUserId()));
-        successResponse.put("deviceName", deviceName);
-        successResponse.put("loginTime", LocalDateTime.now());
-        
-        // 14. 记录审计日志
-        securityService.logAction(user.getUserId(), "USER_LOGIN", "LOGIN", ipAddress, userAgent, 
-                "用户登录成功，设备: " + deviceName, "SUCCESS");
-        
-        return ResponseEntity.ok().body(successResponse);
     }
 
     @PostMapping("/logout")

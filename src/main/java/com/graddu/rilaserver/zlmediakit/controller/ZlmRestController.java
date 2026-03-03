@@ -1,14 +1,14 @@
-package net.enjoy.springboot.registrationlogin.zlmediakit.controller;
+package com.graddu.rilaserver.zlmediakit.controller;
 
-import net.enjoy.springboot.registrationlogin.entity.StreamInfo;
-import net.enjoy.springboot.registrationlogin.repository.StreamInfoRepository;
-import net.enjoy.springboot.registrationlogin.utils.JwtUtil;
-import net.enjoy.springboot.registrationlogin.zlmediakit.config.ExZlmProperties;
-import net.enjoy.springboot.registrationlogin.config.ZLMediaKitConfig;
-import net.enjoy.springboot.registrationlogin.config.SmartCdnConfig;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.service.StreamService;
-import net.enjoy.springboot.registrationlogin.service.UserService;
+import com.graddu.rilaserver.entity.StreamInfo;
+import com.graddu.rilaserver.repository.StreamInfoRepository;
+import com.graddu.rilaserver.utils.JwtUtil;
+import com.graddu.rilaserver.zlmediakit.config.ExZlmProperties;
+import com.graddu.rilaserver.config.ZLMediaKitConfig;
+import com.graddu.rilaserver.config.SmartCdnConfig;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.service.StreamService;
+import com.graddu.rilaserver.service.UserService;
 import io.github.lunasaw.zlm.api.ZlmRestService;
 import io.github.lunasaw.zlm.entity.ServerResponse;
 import io.github.lunasaw.zlm.entity.Version;
@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import net.enjoy.springboot.registrationlogin.constant.SmartCdnRedisKey;
+import com.graddu.rilaserver.constant.SmartCdnRedisKey;
 
 @Tag(name = "zlm-Service", description = "zlm-Service")
 @RequestMapping("/zlm")
@@ -65,7 +65,7 @@ public class ZlmRestController {
     private StreamInfoRepository streamInfoRepository;
 
     @Autowired
-    private net.enjoy.springboot.registrationlogin.service.StreamLimitService streamLimitService;
+    private com.graddu.rilaserver.service.StreamLimitService streamLimitService;
 
     @Autowired
     private StringRedisTemplate redisTemplate;
@@ -80,8 +80,8 @@ public class ZlmRestController {
         errorResponse.put("success", false);
         errorResponse.put("message", message);
         errorResponse.put("code", code);
-        errorResponse.put("timestamp", net.enjoy.springboot.registrationlogin.config.TimeZoneConfig.formatDateTime(
-                net.enjoy.springboot.registrationlogin.config.TimeZoneConfig.getNow()));
+        errorResponse.put("timestamp", com.graddu.rilaserver.config.TimeZoneConfig.formatDateTime(
+                com.graddu.rilaserver.config.TimeZoneConfig.getNow()));
         return errorResponse;
     }
 
@@ -92,8 +92,8 @@ public class ZlmRestController {
         Map<String, Object> successResponse = new HashMap<>();
         successResponse.put("success", true);
         successResponse.put("data", data);
-        successResponse.put("timestamp", net.enjoy.springboot.registrationlogin.config.TimeZoneConfig.formatDateTime(
-                net.enjoy.springboot.registrationlogin.config.TimeZoneConfig.getNow()));
+        successResponse.put("timestamp", com.graddu.rilaserver.config.TimeZoneConfig.formatDateTime(
+                com.graddu.rilaserver.config.TimeZoneConfig.getNow()));
         return successResponse;
     }
 
@@ -138,7 +138,6 @@ public class ZlmRestController {
         String secret = exZlmProperties.getNodes().get(0).getSecret();
         return ZlmRestService.getVersion(host, secret);
     }
-
     /**
      * 获取一个由服务端管理的、安全的推流地址
      * 该接口需要用户通过JWT认证
@@ -150,7 +149,7 @@ public class ZlmRestController {
         try {
             if (smartCdnConfig.isEnabled()) {
                 if (lanId == null || lanId.trim().isEmpty()) {
-                    Map<String, Object> errorResponse = createErrorResponse("SmartCDN已启用，必须提供lanId参数", "MISSING_LAN_ID");
+                    Map<String, Object> errorResponse = createErrorResponse("服务器返回：SmartCDN已启用，必须提供lanId参数", "MISSING_LAN_ID");
                     return ResponseEntity.badRequest().body(errorResponse);
                 }
             }

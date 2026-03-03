@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.zlmediakit.controller;
+package com.graddu.rilaserver.zlmediakit.controller;
 
 import io.github.lunasaw.zlm.entity.ServerNodeConfig;
 import io.github.lunasaw.zlm.hook.param.*;
@@ -16,15 +16,15 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import net.enjoy.springboot.registrationlogin.entity.StreamInfo;
-import net.enjoy.springboot.registrationlogin.repository.StreamInfoRepository;
-import net.enjoy.springboot.registrationlogin.service.StreamService;
-import net.enjoy.springboot.registrationlogin.service.StreamEventService;
-import net.enjoy.springboot.registrationlogin.service.PlayAuthService;
-import net.enjoy.springboot.registrationlogin.dto.PlayAuthResult;
-import net.enjoy.springboot.registrationlogin.config.ZLMediaKitConfig;
-import net.enjoy.springboot.registrationlogin.service.SmartCdnService;
-import net.enjoy.springboot.registrationlogin.constant.SmartCdnRedisKey;
+import com.graddu.rilaserver.entity.StreamInfo;
+import com.graddu.rilaserver.repository.StreamInfoRepository;
+import com.graddu.rilaserver.service.StreamService;
+import com.graddu.rilaserver.service.StreamEventService;
+import com.graddu.rilaserver.service.PlayAuthService;
+import com.graddu.rilaserver.dto.PlayAuthResult;
+import com.graddu.rilaserver.config.ZLMediaKitConfig;
+import com.graddu.rilaserver.service.SmartCdnService;
+import com.graddu.rilaserver.constant.SmartCdnRedisKey;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 

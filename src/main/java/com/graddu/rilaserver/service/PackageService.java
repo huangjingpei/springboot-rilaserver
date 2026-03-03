@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.PackageDto;
+import com.graddu.rilaserver.dto.PackageDto;
 import java.util.List;
 
 public interface PackageService {

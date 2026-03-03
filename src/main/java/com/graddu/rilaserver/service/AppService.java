@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.AppDto;
-import net.enjoy.springboot.registrationlogin.dto.AppSearchRequest;
-import net.enjoy.springboot.registrationlogin.entity.App;
+import com.graddu.rilaserver.dto.AppDto;
+import com.graddu.rilaserver.dto.AppSearchRequest;
+import com.graddu.rilaserver.entity.App;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

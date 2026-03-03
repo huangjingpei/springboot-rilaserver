@@ -1,9 +1,9 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.config.SmartCdnConfig;
-import net.enjoy.springboot.registrationlogin.dto.SmartCdnClientRegisterRequest;
-import net.enjoy.springboot.registrationlogin.dto.SmartCdnPlayUrlResponse;
-import net.enjoy.springboot.registrationlogin.dto.SmartCdnRelayRegisterRequest;
+import com.graddu.rilaserver.config.SmartCdnConfig;
+import com.graddu.rilaserver.dto.SmartCdnClientRegisterRequest;
+import com.graddu.rilaserver.dto.SmartCdnPlayUrlResponse;
+import com.graddu.rilaserver.dto.SmartCdnRelayRegisterRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;

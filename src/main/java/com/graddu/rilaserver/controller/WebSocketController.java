@@ -1,14 +1,14 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.entity.UserSession;
-import net.enjoy.springboot.registrationlogin.model.WebSocketMessage;
-import net.enjoy.springboot.registrationlogin.repository.UserRepository;
-import net.enjoy.springboot.registrationlogin.repository.UserSessionRepository;
-import net.enjoy.springboot.registrationlogin.service.RoomService;
-import net.enjoy.springboot.registrationlogin.service.StreamStatusSyncService;
-import net.enjoy.springboot.registrationlogin.utils.JwtUtil;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.entity.UserSession;
+import com.graddu.rilaserver.model.WebSocketMessage;
+import com.graddu.rilaserver.repository.UserRepository;
+import com.graddu.rilaserver.repository.UserSessionRepository;
+import com.graddu.rilaserver.service.RoomService;
+import com.graddu.rilaserver.service.StreamStatusSyncService;
+import com.graddu.rilaserver.utils.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -237,6 +237,9 @@ public class WebSocketController extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String sessionId = session.getId();
+        
+        // 增加调试日志，确认函数被调用
+        log.info("[WebSocket] handleTextMessage被调用: sessionId={}, payload={}", sessionId, message.getPayload());
 
         // 使用缓存快速获取客户端信息
         RoomService.Client client = sessionClientCache.get(sessionId);
@@ -260,7 +263,8 @@ public class WebSocketController extends TextWebSocketHandler {
             Map<String, Object> msg = objectMapper.readValue(message.getPayload(), Map.class);
 
             // 只处理弹幕消息，并异步处理
-            if ((role.equals("proxy") || role.equals("anchor")) && "bullet".equals(msg.get("type"))) {
+            // 允许 'auth' 角色 (admin用户) 发送消息用于测试
+            if ((role.equals("proxy") || role.equals("anchor") || role.equals("auth")) && "bullet".equals(msg.get("type"))) {
                 Object contentObj = msg.get("content");
                 String content;
                 String subType = msg.get("subType").toString();
@@ -323,6 +327,8 @@ public class WebSocketController extends TextWebSocketHandler {
             //     // 如果解析失败，直接使用原始content字符串
             //     bulletMsgMap.put("content", content);
             // }
+            
+            log.info("[WebSocket] 准备广播弹幕: {}", bulletMsgMap);
             
             String bulletMsg = objectMapper.writeValueAsString(bulletMsgMap);
             TextMessage bulletTextMsg = new TextMessage(bulletMsg);

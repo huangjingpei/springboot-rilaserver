@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.repository;
+package com.graddu.rilaserver.repository;
 
-import net.enjoy.springboot.registrationlogin.entity.AppReview;
+import com.graddu.rilaserver.entity.AppReview;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

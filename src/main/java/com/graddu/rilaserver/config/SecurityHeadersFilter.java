@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.config;
+package com.graddu.rilaserver.config;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;

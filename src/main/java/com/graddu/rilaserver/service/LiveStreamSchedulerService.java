@@ -1,9 +1,9 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.enjoy.springboot.registrationlogin.entity.LiveStreamConfig;
-import net.enjoy.springboot.registrationlogin.repository.LiveStreamConfigRepository;
+import com.graddu.rilaserver.entity.LiveStreamConfig;
+import com.graddu.rilaserver.repository.LiveStreamConfigRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

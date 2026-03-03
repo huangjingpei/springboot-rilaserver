@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.repository;
+package com.graddu.rilaserver.repository;
 
-import net.enjoy.springboot.registrationlogin.entity.UserSession;
+import com.graddu.rilaserver.entity.UserSession;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

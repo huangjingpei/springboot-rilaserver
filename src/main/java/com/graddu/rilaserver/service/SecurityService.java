@@ -1,9 +1,9 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.entity.AuditLog;
-import net.enjoy.springboot.registrationlogin.entity.LoginAttempt;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.entity.UserDevice;
+import com.graddu.rilaserver.entity.AuditLog;
+import com.graddu.rilaserver.entity.LoginAttempt;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.entity.UserDevice;
 
 import java.util.List;
 

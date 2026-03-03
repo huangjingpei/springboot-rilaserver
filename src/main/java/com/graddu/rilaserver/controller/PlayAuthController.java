@@ -1,8 +1,8 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
-import net.enjoy.springboot.registrationlogin.dto.PlayAuthResult;
-import net.enjoy.springboot.registrationlogin.service.PlayAuthService;
-import net.enjoy.springboot.registrationlogin.utils.JwtUtil;
+import com.graddu.rilaserver.dto.PlayAuthResult;
+import com.graddu.rilaserver.service.PlayAuthService;
+import com.graddu.rilaserver.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 

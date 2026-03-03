@@ -1,10 +1,10 @@
-package net.enjoy.springboot.registrationlogin.dto;
+package com.graddu.rilaserver.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import net.enjoy.springboot.registrationlogin.entity.LiveStreamConfig;
+import com.graddu.rilaserver.entity.LiveStreamConfig;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;

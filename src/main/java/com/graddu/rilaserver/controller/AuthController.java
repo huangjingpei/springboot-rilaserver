@@ -1,10 +1,10 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
 import jakarta.validation.Valid;
-import net.enjoy.springboot.registrationlogin.dto.UserDto;
-import net.enjoy.springboot.registrationlogin.entity.User;
-import net.enjoy.springboot.registrationlogin.service.UserService;
-import net.enjoy.springboot.registrationlogin.service.UserServiceImpl;
+import com.graddu.rilaserver.dto.UserDto;
+import com.graddu.rilaserver.entity.User;
+import com.graddu.rilaserver.service.UserService;
+import com.graddu.rilaserver.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

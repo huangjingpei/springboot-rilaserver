@@ -1,11 +1,11 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.enjoy.springboot.registrationlogin.entity.StreamInfo;
-import net.enjoy.springboot.registrationlogin.entity.UserSession;
-import net.enjoy.springboot.registrationlogin.model.StreamEventMessage;
-import net.enjoy.springboot.registrationlogin.repository.StreamInfoRepository;
-import net.enjoy.springboot.registrationlogin.repository.UserSessionRepository;
+import com.graddu.rilaserver.entity.StreamInfo;
+import com.graddu.rilaserver.entity.UserSession;
+import com.graddu.rilaserver.model.StreamEventMessage;
+import com.graddu.rilaserver.repository.StreamInfoRepository;
+import com.graddu.rilaserver.repository.UserSessionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
 import lombok.Data;
 import org.springframework.stereotype.Service;

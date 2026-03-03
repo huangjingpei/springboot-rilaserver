@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

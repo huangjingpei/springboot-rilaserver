@@ -1,4 +1,4 @@
-package net.enjoy.springboot.registrationlogin.constant;
+package com.graddu.rilaserver.constant;
 
 public class SmartCdnRedisKey {
     // 客户端相关

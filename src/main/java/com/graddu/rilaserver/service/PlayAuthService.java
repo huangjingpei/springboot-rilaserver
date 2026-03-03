@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.PlayAuthResult;
+import com.graddu.rilaserver.dto.PlayAuthResult;
 
 /**
  * 播放鉴权服务接口

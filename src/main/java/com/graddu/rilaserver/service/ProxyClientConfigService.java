@@ -1,6 +1,6 @@
-package net.enjoy.springboot.registrationlogin.service;
+package com.graddu.rilaserver.service;
 
-import net.enjoy.springboot.registrationlogin.dto.ProxyClientConfigDto;
+import com.graddu.rilaserver.dto.ProxyClientConfigDto;
 
 public interface ProxyClientConfigService {
     

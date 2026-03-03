@@ -1,7 +1,7 @@
-package net.enjoy.springboot.registrationlogin.config;
+package com.graddu.rilaserver.config;
 
-import net.enjoy.springboot.registrationlogin.security.CustomUserDetailsService;
-import net.enjoy.springboot.registrationlogin.utils.JwtAuthenticationFilter;
+import com.graddu.rilaserver.security.CustomUserDetailsService;
+import com.graddu.rilaserver.utils.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,9 +1,9 @@
-package net.enjoy.springboot.registrationlogin.controller;
+package com.graddu.rilaserver.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.enjoy.springboot.registrationlogin.dto.ProxyClientConfigDto;
-import net.enjoy.springboot.registrationlogin.service.ProxyClientConfigService;
+import com.graddu.rilaserver.dto.ProxyClientConfigDto;
+import com.graddu.rilaserver.service.ProxyClientConfigService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

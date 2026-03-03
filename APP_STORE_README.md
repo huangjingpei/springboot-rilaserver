@@ -296,7 +296,7 @@ public enum Platform {
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd spring-boot-user-registration-and-Login
+cd rilaserver
 
 # 配置数据库
 mysql -u root -p < app_store_tables.sql
@@ -314,7 +314,7 @@ mvn spring-boot:run
 mvn clean package -Dmaven.test.skip=true
 
 # 运行应用
-java -jar target/registration-login-0.0.1-SNAPSHOT.jar \
+java -jar target/rilaserver-0.0.1-SNAPSHOT.jar \
   --spring.profiles.active=prod \
   --server.port=8080
 ```
@@ -322,7 +322,7 @@ java -jar target/registration-login-0.0.1-SNAPSHOT.jar \
 ### 3. Docker部署
 ```dockerfile
 FROM openjdk:17-jdk-slim
-COPY target/registration-login-0.0.1-SNAPSHOT.jar app.jar
+COPY target/rilaserver-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app.jar"]
 ```
