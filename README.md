@@ -8,13 +8,29 @@
 - 智能加速：SmartCDN（基于 LAN 的中继优化，降低公网带宽与延迟）
 - 应用能力：应用商城（App 列表、搜索、筛选、统计）、软件升级（多平台包、完整性校验、强更）
 - 管理界面：admin-ui（基于 Vue3 + Vite 的管理后台）
+- 用户端界面：my-ui（单用户控制台，个人流与日志）
 - 客户端配套：qtloginclient、SmartCDNQt（LAN/mDNS 能力、边缘中继）
 
 目录结构要点：
 - 后端源码：src/main/java/com/graddu/rilaserver
 - 管理后台：admin-ui
+- 用户端：my-ui
 - 智能加速与客户端：SmartCDNQt、qtloginclient
 - 数据库脚本与文档：*.sql / 各种 *.md 指南
+
+## 职责划分
+- admin-ui（全局运营/运维后台）
+  - 用户与角色：创建/编辑/禁用用户，角色与权限管理
+  - 套餐与配额：用户套餐分配与调整、推流上限、设备上限
+  - 应用商城：应用上架、推荐、分类与统计
+  - 升级中心：多平台升级包上传，强制更新与发布说明
+  - 流媒体管理：流列表、状态监控、密钥/地址查看与控制
+  - 系统与安全：安全策略、流媒体端口、录制与日志、网络诊断
+- my-ui（单用户个人控制台）
+  - 我的流：当前/历史流信息、播放地址与鉴权结果
+  - 推流会话：每次推流的开始/结束时间与时长统计
+  - 个人日志：与当前账户相关的操作记录与系统通知
+  - 实时互动：基于 WebSocket 的在线人数/弹幕视图（按业务接入播放器）
 
 ## 典型使用场景
 - 个人/团队直播平台
@@ -56,6 +72,8 @@
   - AppController、UpdateController：应用 CRUD/检索与升级包上传、版本查询、文件存储映射
 - 管理后台（admin-ui）
   - 登录、仪表盘、用户管理、流媒体管理、应用与升级管理、网络诊断工具
+- 用户端（my-ui）
+  - 登录、个人控制台、流信息与直播时长统计、个人日志与状态视图
 
 ## 快速上手
 后端（Spring Boot）：
@@ -72,6 +90,12 @@
 2. 设置开发环境变量：.env.development 中设置 VITE_APP_BASE_API=/api
 3. 启动前端：npm run dev
 4. 访问：http://localhost:5173 登录后台（详见 admin-ui/ADMIN_GUIDE.md）
+
+用户端（my-ui）：
+1. 进入 my-ui 目录，安装依赖：npm install
+2. 开发代理：vite.config.js 已将 /api 与 /ws 代理至 http://localhost:8080
+3. 启动前端：npm run dev
+4. 访问：http://localhost:5174 使用个人控制台
 
 ## 直播/流媒体要点
 - 推/拉流地址由 ZLMediaKitConfig 与 StreamService 统一生成与管理

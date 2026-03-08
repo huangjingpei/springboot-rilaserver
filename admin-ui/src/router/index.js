@@ -7,6 +7,7 @@ import AppManagement from '../views/AppManagement.vue';
 import StreamManagement from '../views/StreamManagement.vue';
 import NetworkTest from '../views/NetworkTest.vue';
 import SystemSettings from '../views/SystemSettings.vue';
+import Billing from '../views/Billing.vue';
 
 const routes = [
   {
@@ -43,6 +44,12 @@ const routes = [
           name: 'StreamManagement',
           component: StreamManagement,
           meta: { title: '流媒体管理', icon: 'video' }
+        },
+        {
+          path: 'billing',
+          name: 'Billing',
+          component: Billing,
+          meta: { title: '账单结算', icon: 'money' }
         },
         {
           path: 'network',
